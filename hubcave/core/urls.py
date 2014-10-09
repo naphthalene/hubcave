@@ -7,7 +7,6 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
-    # Examples:
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^$', views.Index.as_view(), name='index'),
     url(r'^admin/', include(admin.site.urls)),
