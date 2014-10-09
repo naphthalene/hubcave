@@ -1,0 +1,5 @@
+include setup.py README.md MANIFEST.in LICENSE
+
+recursive-include hubcave/core/fixtures *
+recursive-include hubcave/core/static *
+recursive-include hubcave/core/templates *

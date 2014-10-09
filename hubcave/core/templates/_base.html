@@ -1,0 +1,29 @@
+{% load staticfiles %}
+{% load sekizai_tags %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>{% block title %}Hubcave!{% endblock title %}</title>
+        <!-- This may need to be removed, probably best to pick one theme for the site -->
+        {% if user.is_authenticated and user.template %}
+            <link rel="stylesheet" type="text/css" href="{% static 'css/'|add:user.template %}"/>
+        {% else %}
+            <link rel="stylesheet" type="text/css" href="{% static 'css/flatly.min.css' %}"/>
+        {% endif %}
+        <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}"/>
+    </head>
+    <body>
+        {% block body %}
+        {% endblock body %}
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="{% static 'js/bootstrap.min.js' %}"></script>
+        <script>
+            $(function(){
+               $('[data-toggle=tooltip]').tooltip();
+            });
+        </script>
+        {% render_block "js" %}
+    </body>
+</html>

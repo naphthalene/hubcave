@@ -1,8 +1,6 @@
 hubcave
 =======
 
-
-
 # Flow #
 
 User logs in via GitHub OAuth, gets shown a dashboard with any news,
@@ -18,7 +16,8 @@ compatible game server versions). There will be controls on the page to
 open up web IRC, switch worlds and get news updates, with the same
 dashboard widgets as the home page. In addition controls for uploading
 save files to the world. This can only be done once, as once you upload
-your world it will mutate based on the repository information (MAYBE).
+your world it will mutate based on the repository information by making
+additions only.
 
 A server hosts a world state. The world state changes as you play the
 game. The game itself will query the central server via JS with
@@ -48,7 +47,7 @@ Manages:
 Individuals can host a game server (like minecraft). Any user can upload
 a saved world of theirs to a game server permitted the server allows for
 it. The cities are merged, either via portals present in every city or
-by roads. The latter is probably simpler.
+by roads.
 
 ### API ###
 
@@ -63,3 +62,16 @@ world they were found. Public items are available for retrieval in any
 world, but they must be kept at a bank.
 
 ## Banks ##
+
+
+# Tech #
+
+## Frontend ##
+
+   - pixi.js
+   - Express
+   - socket.io
+
+   - Express
+   - socket.io
+   - node.js

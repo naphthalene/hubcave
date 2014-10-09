@@ -1,0 +1,13 @@
+Django==1.7
+PyJWT==0.2.1
+South==1.0
+argparse==1.2.1
+django-grappelli==2.6.1
+oauthlib==0.6.3
+python-openid==2.2.5
+python-social-auth==0.2.1
+requests==2.4.1
+requests-oauthlib==0.4.1
+six==1.8.0
+wsgiref==0.1.2
+logan>=0.5.10,<0.6

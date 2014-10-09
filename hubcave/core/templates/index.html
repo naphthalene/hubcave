@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load sekizai_tags %}
+
+{% block content %}
+ <div>
+ <h1>Github authentication test</h1>
+
+ <p>
+   <ul>
+   {% if user and not user.is_anonymous %}
+     <li>
+       <a>Hello {{ user.get_full_name|default:user.username }}!</a>
+     </li>
+     <li>
+       <a href="{% url 'auth:logout' %}?next={{ request.path }}">Logout</a>
+     </li>
+   {% else %}
+     <li>
+       <a href="{% url 'social:begin' 'github-oauth2' %}?next={{ request.path }}">Login with GitHub</a>
+     </li>
+   {% endif %}
+   </ul>
+ </p>
+ </div>
+{% endblock %}
