@@ -6,6 +6,7 @@ django-grappelli==2.6.1
 oauthlib==0.6.3
 python-openid==2.2.5
 python-social-auth==0.2.1
+django-authtools>=0.2.1,<0.3
 requests==2.4.1
 requests-oauthlib==0.4.1
 six==1.8.0

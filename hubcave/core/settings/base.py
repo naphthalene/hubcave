@@ -26,7 +26,6 @@ INSTALLED_APPS = (
 
     # Third party
     'grappelli',
-    'django.contrib.admin',
     'south',
     'sekizai',
     'crispy_forms',
@@ -89,6 +88,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 #     'social.pipeline.social_auth.load_extra_data',
 #     'social.pipeline.user.user_details'
 # )
+
+LOGIN_REDIRECT_URL = '/'
 
 SOCIAL_AUTH_AUTHENTICATION_BACKENDS = (
     'social.backends.github.GithubOAuth2',

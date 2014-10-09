@@ -7,8 +7,11 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
-    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^$', views.Index.as_view(), name='index'),
+    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
-    url('', include('social.apps.django_app.urls', namespace='social'))
+    url('', include('social.apps.django_app.urls', namespace='social')),
+    url(r'^logout/$', 'django.contrib.auth.views.logout',
+        {'next_page': '/'}),
+    url('', include('django.contrib.auth.urls', namespace='auth')),
 )
