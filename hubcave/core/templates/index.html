@@ -2,24 +2,15 @@
 {% load sekizai_tags %}
 
 {% block content %}
- <div>
- <h1>Github authentication test</h1>
-
- <p>
-   <ul>
-   {% if user and not user.is_anonymous %}
-     <li>
-       <a>Hello {{ user.get_full_name|default:user.username }}!</a>
-     </li>
-     <li>
-       <a href="{% url 'auth:logout' %}?next={{ request.path }}">Logout</a>
-     </li>
-   {% else %}
-     <li>
-       <a href="{% url 'social:begin' 'github' %}?next={{ request.path }}">Login with GitHub</a>
-     </li>
-   {% endif %}
-   </ul>
- </p>
- </div>
+<div class="row">
+  <div class="col-md-7">
+    {% if user and not user.is_anonymous %}
+    <p> Coming soon </p>
+    {% else %}
+    <a class="btn btn-xlarge btn-github" href="{% url 'social:begin' 'github' %}?next={{ request.path }}">
+      <i class="fa fa-github"></i> | Login with GitHub
+    </a>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

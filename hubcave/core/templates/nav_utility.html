@@ -11,17 +11,16 @@
             </button>
         </div>
 
-        {% if request.user.is_authenticated %}
+        {% if user and not user.is_anonymous%}
 
             <div class="navbar-collapse collapse" id="navbar-main">
                 <ul class="nav navbar-nav navbar-right">
                     <li><a href="{% url 'index' %}">Dashboard</a></li>
                     <li class="dropdown">
-                        <a data-toggle="dropdown" class="dropdown-toggle" href="#"> &nbsp;{{ request.user.email }} <b class="caret"></b></a>
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#"> &nbsp;{{ user.get_full_name|default:user.username }} <b class="caret"></b></a>
                         <ul class="dropdown-menu">
-                            <li><a href="{% url 'accounts_user_change' user.pk %}">Update Profile</a></li>
                             <li class="divider"></li>
-                            <li><a href="{% url 'logout' %}">Logout</a></li>
+                            <li><a href="{% url 'auth:logout' %}?next={{ request.path }}">Logout</a></li>
                         </ul>
                     </li>
                 </ul>

@@ -12,9 +12,6 @@ TEMPLATE_DEBUG = DEBUG
 
 ALLOWED_HOSTS = []
 
-
-# Application definition
-
 INSTALLED_APPS = (
     # Django
     'django.contrib.admin',
@@ -79,16 +76,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 # Social Auth
 
-# SOCIAL_AUTH_PIPELINE = (
-#     'social.pipeline.social_auth.social_details',
-#     'social.pipeline.social_auth.social_uid',
-#     'social.pipeline.social_auth.auth_allowed',
-#     'social.pipeline.social_auth.social_user',
-#     'social.pipeline.social_auth.associate_user',
-#     'social.pipeline.social_auth.load_extra_data',
-#     'social.pipeline.user.user_details'
-# )
-
 LOGIN_REDIRECT_URL = '/'
 
 SOCIAL_AUTH_AUTHENTICATION_BACKENDS = (
@@ -137,6 +124,7 @@ STATICFILES_FINDERS = (
 )
 ########## END STATIC FILE CONFIGURATION
 
+########## LOGGING CONFIGURATION
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -179,3 +167,5 @@ LOGGING = {
 #         },
 #     }
 # }
+
+########## END LOGGING CONFIGURATION
