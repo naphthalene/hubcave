@@ -1,12 +1,12 @@
-import json
-from datetime import timedelta, datetime
-
-from django.db import connection
+from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
+from django.core.urlresolvers import reverse
 
 class Index(TemplateView):
     template_name = 'index.html'
 
-    def get_context_data(self, **kwargs):
-        context = super(Index, self).get_context_data(**kwargs)
-        return context
+    def dispatch(self, request, *args, **kwargs):
+        if request.user and request.user.is_authenticated():
+            return HttpResponseRedirect(reverse('dashboard:dashboard_view'))
+        else:
+            return super(Index, self).dispatch(request, *args, **kwargs)

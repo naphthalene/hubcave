@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load sekizai_tags %}
+{% load staticfiles %}
+
+{% block head %}
+{% if debug %}
+<script src="{% static 'js/pixi.dev.js' %}"></script>
+{% else %}
+<script src="{% static 'js/pixi.js' %}"></script>
+{% endif %}
+{% endblock head %}
+
+
+{% block content %}
+<div id="game"></div>
+<script>
+// HUBCAVE
+
+// create an new instance of a pixi stage
+var stage = new PIXI.Stage(0x66FF99);
+
+// create a renderer instance.
+var renderer = PIXI.autoDetectRenderer(400, 300);
+
+// add the renderer view element to the DOM
+var game_div = document.getElementById("game")
+game_div.appendChild(renderer.view);
+
+requestAnimFrame( animate );
+
+// create a texture from an image path
+var texture = PIXI.Texture.fromImage("{% static 'img/desert_nonogram.png' %}");
+// create a new Sprite using the texture
+var bunny = new PIXI.Sprite(texture);
+
+// center the sprites anchor point
+bunny.anchor.x = 0.5;
+bunny.anchor.y = 0.5;
+
+// move the sprite t the center of the screen
+bunny.position.x = 200;
+bunny.position.y = 150;
+
+stage.addChild(bunny);
+
+function animate() {
+
+    requestAnimFrame( animate );
+
+    // render the stage
+    renderer.render(stage);
+}
+
+</script>
+{% endblock %}

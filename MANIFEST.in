@@ -3,3 +3,11 @@ include setup.py README.md MANIFEST.in LICENSE
 recursive-include hubcave/core/fixtures *
 recursive-include hubcave/core/static *
 recursive-include hubcave/core/templates *
+
+recursive-include hubcave/dashboard/fixtures *
+recursive-include hubcave/dashboard/static *
+recursive-include hubcave/dashboard/templates *
+
+recursive-include hubcave/game/fixtures *
+recursive-include hubcave/game/static *
+recursive-include hubcave/game/templates *
