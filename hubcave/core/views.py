@@ -7,6 +7,6 @@ class Index(TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if request.user and request.user.is_authenticated():
-            return HttpResponseRedirect(reverse('dashboard:dashboard_view'))
+            return HttpResponseRedirect(reverse('dashboard:dashboard'))
         else:
             return super(Index, self).dispatch(request, *args, **kwargs)

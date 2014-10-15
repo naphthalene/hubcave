@@ -1,10 +1,11 @@
 from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required
 
-from hubcave.game import views
+from hubcave.game.views import Game
 
 urlpatterns = patterns(
     '',
-    url(r'^game/$', login_required(views.Game.as_view(),
-                                   login_url='/'), name='game_view'),
+    url(r'^game/$', login_required(Game.as_view(),
+                                   login_url='/'),
+        name='game'),
 )

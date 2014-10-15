@@ -29,6 +29,7 @@ INSTALLED_APPS = (
     'django_tables2',
     'bootstrapform',
     'social.apps.django_app.default',
+    'gunicorn',
 
     # Project
     'hubcave.dashboard',

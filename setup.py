@@ -15,12 +15,13 @@ install_requires = [
     'django-sekizai>=0.7,<0.8',
     'django-grappelli>=2.5.1,<2.6',
     'logan>=0.5.10,<0.6',
-    'GitPython',
+    'pygithub==1.25.2',
     'python-social-auth<=0.1.26',
     'django-bootstrap-form>=3.1,<3.2',
     'croniter==0.3.4',
     'gevent-socketio>=0.3.6,<0.4',
     'virtualenv>=1.11.6,<1.12',
+    'gunicorn==19.1.1',
 ]
 
 dev_requires = [

@@ -26,6 +26,8 @@ var renderer = PIXI.autoDetectRenderer(400, 300);
 var game_div = document.getElementById("game")
 game_div.appendChild(renderer.view);
 
+setInterval(animate, 100);
+
 requestAnimFrame( animate );
 
 // create a texture from an image path

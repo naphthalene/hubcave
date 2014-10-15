@@ -15,8 +15,8 @@
 
             <div class="navbar-collapse collapse" id="navbar-main">
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a href="{% url 'dashboard:dashboard_view' %}">Dashboard</a></li>
-                    <li><a href="{% url 'game:game_view' %}">Play!</a></li>
+                    <li><a href="{% url 'dashboard:dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'game:game' %}">Play!</a></li>
                     <li class="dropdown">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#"> &nbsp;{{ user.get_full_name|default:user.username }} <b class="caret"></b></a>
                         <ul class="dropdown-menu">
