@@ -31,7 +31,7 @@ class undirected_graph(dict):
     def __has_key__(self, key):
         return super(undirected_graph, self).__has_key__(tuple(sorted(key)))
 
-def min_cost_spanning_tree(height, weight):
+def min_cost_spanning_tree(height, width):
     def grid_adjacent(vertex):
         """
         Return all grid vertices adjacent to the given point.
@@ -91,36 +91,9 @@ def min_cost_spanning_tree(height, weight):
 
         # update the spanning tree
         spanning[(v1,v2)] = True
+    return draw_tree(spanning, height, width)
 
-    return draw_tree(spanning)
-
-def RDM():
-    spanning = undirected_graph()
-
-    closed = set([(0,0)])
-    neighbors = [((0,0), x) for x in grid_adjacent((0,0))]
-
-    while neighbors:
-        v1, v2 = neighbors.pop(random.randrange(len(neighbors)))
-
-        # v1 is the vertex already in the spanning tree
-        # it's possible that we've already added v2 to the spanning tree
-        if v2 in closed:
-            continue
-
-        # add v2 to the closed set
-        closed.add(v2)
-
-        for neighbor in grid_adjacent(v2):
-            if neighbor not in closed:
-                neighbors.append((v2, neighbor))
-
-        # update the spanning tree
-        spanning[(v1,v2)] = True
-
-    return draw_tree(spanning)
-
-def draw_tree(spanning):
+def draw_tree(spanning, height, width):
     # Create a big array of 0s and 1s for pypng
 
     pixels = []
