@@ -7,7 +7,6 @@ setup_requires = []
 install_requires = [
     'django>=1.6.5,<1.7',
     'south>=0.8.4,<0.9',
-    'pillow>=2.5.1,<2.6',
     'django-crispy-forms>=1.4.0,<1.5',
     'django-custom-user>=0.4,<0.5',
     'django-tables2>=0.15.0,<0.16',
@@ -43,7 +42,7 @@ mysql_requires = [
 
 setup(
     name='hubcave',
-    version='0.1',
+    version='0.2',
     author='Pavel Sadikov',
     url='https://github.com/naphthalene/hubcave',
     description='In-browser, HTML5, GitHub-seeded game.',

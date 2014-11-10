@@ -1,5 +1,6 @@
-from django.conf.urls import patterns, include, url
 from django.contrib import admin
+from django.conf.urls import patterns, include, url
+from django.views.generic import TemplateView
 
 from hubcave.core import views
 
@@ -11,8 +12,10 @@ urlpatterns = patterns(
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
-    url('', include('hubcave.dashboard.urls', namespace='dashboard')),
-    url('', include('hubcave.game.urls', namespace='game')),
+    url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt',
+                                               content_type='text/plain')),
+    url('', include('hubcave.dashboard.urls')),
+    url('', include('hubcave.game.urls')),
     url('', include('social.apps.django_app.urls', namespace='social')),
     url('', include('django.contrib.auth.urls', namespace='auth')),
 )

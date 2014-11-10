@@ -10,6 +10,8 @@ DEBUG = False
 
 TEMPLATE_DEBUG = DEBUG
 
+ADMINS = (('Pavel Sadikov', 'pashalab@gmail.com'))
+
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = (
@@ -30,10 +32,18 @@ INSTALLED_APPS = (
     'bootstrapform',
     'social.apps.django_app.default',
     'gunicorn',
+    'dash',
+
+    # Dashboard layouts
+    'dash.contrib.plugins.news',
+    'dash.contrib.layouts.android',
+    'dash.contrib.layouts.bootstrap2',
+    'dash.contrib.layouts.windows8',
 
     # Project
     'hubcave.dashboard',
     'hubcave.game',
+    'hubcave.core',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -65,14 +75,16 @@ TEMPLATE_DIRS = (
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
-    'django.core.context_processors.debug',
+    'django.core.context_processors.tz',
     'django.core.context_processors.i18n',
+    'django.core.context_processors.debug',
     'django.core.context_processors.media',
     'django.core.context_processors.static',
-    'django.core.context_processors.tz',
+    'django.core.context_processors.request',
     'social.apps.django_app.context_processors.backends',
     'social.apps.django_app.context_processors.login_redirect',
     'sekizai.context_processors.sekizai',
+    'hubcave.core.context_processors.sidebar_lists',
 )
 
 # Social Auth
@@ -144,29 +156,7 @@ LOGGING = {
         },
     },
 }
-## Turn this on when running on hubcave.net
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'filters': {
-#         'require_debug_false': {
-#             '()': 'django.utils.log.RequireDebugFalse'
-#         }
-#     },
-#     'handlers': {
-#         'mail_admins': {
-#             'level': 'ERROR',
-#             'filters': ['require_debug_false'],
-#             'class': 'django.utils.log.AdminEmailHandler'
-#         }
-#     },
-#     'loggers': {
-#         'django.request': {
-#             'handlers': ['mail_admins'],
-#             'level': 'ERROR',
-#             'propagate': True,
-#         },
-#     }
-# }
 
-########## END LOGGING CONFIGURATION
+########## SESSION CONFIGURATION
+
+EXPIRE_SESSION_AT_BROWSER_CLOSE = True
