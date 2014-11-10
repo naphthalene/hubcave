@@ -8,9 +8,13 @@
 {% else %}
 <script src="{% static 'js/pixi.js' %}"></script>
 {% endif %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/game.css' %}"/>
 {% endblock head %}
 
 
 {% block content %}
+<div class="canvas-panel">
+</div>
+<script src="{% static 'js/keydrown.js' %}"></script>
 <script src="{% static 'js/game.js' %}"></script>
 {% endblock %}

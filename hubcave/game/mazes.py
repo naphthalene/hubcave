@@ -96,11 +96,13 @@ def min_cost_spanning_tree(height, width):
 
 def draw_tree(spanning, height, width):
     # Create a big array of 0s and 1s for pypng
-
+    img_height = height * 2 + 1
+    img_width = width * 2 + 1
     pixels = []
 
     # Add a row of off pixels for the top
-    pixels.append([0] + [1] + ([0] * (width-2)))
+    pixels.append([0] + [1] + ([0] * (img_width-2)))
+    print pixels, width-2
 
     for y in xrange(height):
         # Row containing nodes
@@ -109,7 +111,6 @@ def draw_tree(spanning, height, width):
             row.append(1)
             if x < width-1:
                 row.append( int(((x,y),(x+1,y)) in spanning) )
-                print x, y, int(((x,y),(x+1,y)) in spanning)
         row.append(0) # Last column is off
         pixels.append(row)
 
@@ -119,10 +120,10 @@ def draw_tree(spanning, height, width):
             for x in xrange(width):
                 row.append( int(((x,y),(x,y+1)) in spanning) )
                 row.append(0)
-            row.append(0) # Last column is off
+            # row.append(0) # Last column is off
             pixels.append(row)
 
     # Add a row of off pixels for the bottom
-    pixels.append(([0] * (width-2)) + [1] + [0])
+    pixels.append(([0] * (img_width-2)) + [1] + [0])
 
     return pixels

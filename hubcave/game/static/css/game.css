@@ -1,0 +1,13 @@
+.rendererView {
+    border-style: double;
+    margin: 0 auto 0 auto;
+    display: block;
+}
+
+body {
+    background-color: #000000;
+}
+
+.panel-body {
+    background:#000000;
+}
