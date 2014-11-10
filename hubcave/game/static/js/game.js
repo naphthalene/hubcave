@@ -1,36 +1,35 @@
 // HUBCAVE
+window.onbeforeunload = function (e) {
+  return "Quit game?";
+};
 
 // create an new instance of a pixi stage
 var stage = new PIXI.Stage(0x66FF99);
+    graphics = new PIXI.Graphics();
 
 // create a renderer instance.
-var renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
+var renderer = PIXI.autoDetectRenderer(window.innerWidth - 10,
+                                       window.innerHeight - 100);
 
-// add the renderer view element to the DOM
-var game_div = document.getElementById("game")
-game_div.appendChild(renderer.view);
+
+var maze =
+
+
+renderer.view.className = "rendererView";
+document.body.appendChild(renderer.view);
+
+setInterval(animate, 100);
+
+graphics.beginFill(0xFFFFFF);
+
 
 requestAnimFrame( animate );
 
-// create a texture from an image path
-var texture = PIXI.Texture.fromImage("{% static 'img/desert_nonogram.png' %}");
-// create a new Sprite using the texture
-var bunny = new PIXI.Sprite(texture);
-
-// center the sprites anchor point
-bunny.anchor.x = 0.5;
-bunny.anchor.y = 0.5;
-
-// move the sprite t the center of the screen
-bunny.position.x = 200;
-bunny.position.y = 150;
-
-stage.addChild(bunny);
-
 function animate() {
+  // add it the stage so we see it on our screens..
+  stage.addChild(graphics);
 
-    requestAnimFrame( animate );
+  requestAnimFrame( animate );
 
-    // render the stage
-    renderer.render(stage);
+  renderer.render(stage);
 }
