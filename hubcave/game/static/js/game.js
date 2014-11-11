@@ -175,7 +175,7 @@ scrollArea.addChild(player_sprite);
 
 stage.addChild(scrollArea);
 
-movespeed = 0.2 * scrollArea.scale.x;
+movespeed = 0.15 * scrollArea.scale.x;
 edge_buffer = 100;
 
 requestAnimFrame( animate );
