@@ -13,5 +13,12 @@
 
 
 {% block content %}
-<script src="{% static 'js/hubcave.js' %}"></script>
+<div class="canvas-panel"></div>
+<script type="text/javascript">
+  maze = {{  }};
+  
+  widget.init(data_from_django);
+</script>
+<script src="{% static 'js/keydrown.js' %}"></script>
+<script src="{% static 'js/game.js' %}"></script>
 {% endblock %}

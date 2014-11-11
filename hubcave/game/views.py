@@ -26,6 +26,7 @@ class GameDetail(DetailView):
         # Call the base implementation first to get a context
         context = super(GameDetail, self).get_context_data(**kwargs)
         # From here use self.object to gather info about the game
+        context['game_data'] = self.object.game_json()
         return context
 
 class GameCreate(CreateView):
