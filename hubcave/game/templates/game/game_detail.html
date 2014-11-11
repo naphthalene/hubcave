@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load sekizai_tags %}
+{% load staticfiles %}
+
+{% block head %}
+{% if debug %}
+<script src="{% static 'js/pixi.dev.js' %}"></script>
+{% else %}
+<script src="{% static 'js/pixi.js' %}"></script>
+{% endif %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/game.css' %}"/>
+{% endblock head %}
+
+
+{% block content %}
+<script src="{% static 'js/hubcave.js' %}"></script>
+{% endblock %}

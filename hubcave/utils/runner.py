@@ -8,7 +8,6 @@ KEY_LENGTH = 40
 
 
 CONFIG_TEMPLATE = """
-
 from hubcave.core.settings.base import *
 
 CONF_ROOT = os.path.dirname(__file__)
@@ -25,7 +24,6 @@ DATABASES = {
 }
 
 SECRET_KEY = %(default_key)r
-
 """
 
 
