@@ -33,13 +33,6 @@ INSTALLED_APPS = (
     'bootstrapform',
     'social.apps.django_app.default',
     'gunicorn',
-    'dash',
-
-    # Dashboard layouts
-    'dash.contrib.plugins.news',
-    'dash.contrib.layouts.android',
-    'dash.contrib.layouts.bootstrap2',
-    'dash.contrib.layouts.windows8',
 
     # Project
     'hubcave.dashboard',
