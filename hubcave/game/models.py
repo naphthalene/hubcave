@@ -51,7 +51,7 @@ class Game(TrackingFields):
 
     def generate_or_update_map(self):
         if self.map_data is None:
-            self.generate_map("cave")
+            self.generate_map("maze")
         else:
             self.update_map()
 
