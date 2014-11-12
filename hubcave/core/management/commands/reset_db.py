@@ -14,7 +14,8 @@ class Command(BaseCommand):
         Note: Transaction wrappers are in reverse as a work around for
         autocommit, anybody know how to do this the right way?
         """
-    
+
+        print settings
         engine = settings.DATABASE_ENGINE
     
         if engine == 'sqlite3':
