@@ -20,8 +20,8 @@ class Command(BaseCommand):
         name = settings.DATABASES['default']['NAME']
         user = settings.DATABASES['default']['USER']
         passwd = settings.DATABASES['default']['PASSWORD']
-        host = settings.DATABASE['default']['HOST']
-        port = settings.DATABASE['default']['PORT']
+        host = settings.DATABASES['default']['HOST']
+        port = settings.DATABASES['default']['PORT']
     
         if engine == 'django.db.backends.sqlite3':
             import os
