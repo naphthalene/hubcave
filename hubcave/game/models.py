@@ -16,6 +16,9 @@ class Game(TrackingFields):
     user = models.ForeignKey(User)
     repository = models.CharField(max_length=255, unique=True)
     map_data = models.BinaryField(null=True)
+    starting_x = models.IntegerField(null=True)
+    starting_y = models.IntegerField(null=True)
+    map_type = models.CharField(max_length=255, default="cave")
     size = models.IntegerField(null=True)
     commits = models.IntegerField(null=True)
     points_spent = models.IntegerField(default=0)
@@ -51,7 +54,7 @@ class Game(TrackingFields):
 
     def generate_or_update_map(self):
         if self.map_data is None:
-            self.generate_map("maze")
+            self.generate_map("cave")
         else:
             self.update_map()
 
@@ -72,7 +75,9 @@ class Game(TrackingFields):
 
         structure = None
         if type_map == "cave":
-            original_position, structure = random_walk()
+            (starting_x, starting_y), structure = random_walk()
+            self.starting_x = starting_x
+            self.starting_y = starting_y
         else:
             map_size = 10
             structure = min_cost_spanning_tree(map_size, map_size)
