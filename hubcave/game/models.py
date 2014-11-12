@@ -12,7 +12,7 @@ from hubcave.game.random_walk import random_walk
 from hubcave.game.protobuf.hubcave_pb2 import Map
 from protobuf_to_dict import protobuf_to_dict
 
-class Game(TrackingFields):
+class Game(models.Model):
     user = models.ForeignKey(User)
     repository = models.CharField(max_length=255, unique=True)
     map_data = models.BinaryField(null=True)
@@ -54,7 +54,7 @@ class Game(TrackingFields):
 
     def generate_or_update_map(self):
         if self.map_data is None:
-            self.generate_map("cave")
+            self.generate_map()
         else:
             self.update_map()
 
@@ -65,7 +65,7 @@ class Game(TrackingFields):
         # print self.commits_since.totalCount
         pass
 
-    def generate_map(self, type_map):
+    def generate_map(self):
         """
         """
         # self.update_repo_magnitude()
@@ -74,10 +74,12 @@ class Game(TrackingFields):
         gmap.repository = self.repository
 
         structure = None
-        if type_map == "cave":
+        if self.map_type == "cave":
             (starting_x, starting_y), structure = random_walk()
             self.starting_x = starting_x
+            gmap.starting_x = starting_x
             self.starting_y = starting_y
+            gmap.starting_y = starting_y
         else:
             map_size = 10
             structure = min_cost_spanning_tree(map_size, map_size)

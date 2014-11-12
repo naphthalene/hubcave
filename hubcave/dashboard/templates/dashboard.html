@@ -6,8 +6,8 @@
 {% block sidebar %}
 <!-- <div class="col-md-3"> -->
 <!-- </div> -->
-<div class="col-md-3">
-  <div class="panel panel-default">
+<div class="col-md-3 col-sm-6">
+  <div class="panel panel-default col-lg-push-9">
     <div class="panel-heading">Games</div>
     <div class="panel-body">
       {% for game in sidebar_games %}
@@ -23,6 +23,20 @@
       {% for user in active_users %}
       <a href="#" {{ user.id }}>/a></br>
       {% endfor %}
+    </div>
+  </div>
+</div>
+<div class="col-md-9 col-sm-6">
+  <div class="panel panel-default">
+    <div class="panel-heading">News</div>
+    <div class="panel-body">
+      <h4>Adding More Block Types</h4>
+      <blockquote>
+        <p>
+          There will be more blocks coming soon. Water,
+          weak/breakable walls, start location and doors
+        </p>
+      </blockquote>
     </div>
   </div>
 </div>

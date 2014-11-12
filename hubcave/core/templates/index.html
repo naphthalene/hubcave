@@ -4,10 +4,19 @@
 
 {% block content %}
 <div class="row">
-  <div class="col-md-5 center-block" style="margin: 0 auto 0 auto; display: block;">
-    <a class="btn btn-xlarge btn-github" href="{% url 'social:begin' 'github' %}?next={{ request.path }}">
-      <i class="fa fa-github"></i> | Login with GitHub
-    </a>
+  <div class="col-md-12 col-sm-12 col-lg-12">
+    <div class="panel panel-default">
+      <div class="panel-heading">Join HubCave!</div>
+      <div class="panel-body text-center">
+        <h3>
+          Github-based 2D cave explorer
+        </h3>
+        <a class="btn btn-large btn-github"
+           href="{% url 'social:begin' 'github' %}?next={{ request.path }}">
+          <i class="fa fa-github"></i> | Login with GitHub
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
