@@ -21,7 +21,9 @@ install_requires = [
     'gevent-socketio>=0.3.6,<0.4',
     'virtualenv>=1.11.6,<1.12',
     'gunicorn==19.1.1',
-    'django-extensions==1.4.6'
+    'django-extensions==1.4.6',
+    'protobuf==2.6.0',
+    'protobuf-to-dict==0.1.0'
 ]
 
 dev_requires = [
