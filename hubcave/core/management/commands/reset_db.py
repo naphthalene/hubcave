@@ -34,7 +34,7 @@ class Command(BaseCommand):
             import MySQLdb as Database
             kwargs = {
                 'user': user,
-                'passwd': ,
+                'passwd': passwd,
             }
             if host.startswith('/'):
                 kwargs['unix_socket'] = host
