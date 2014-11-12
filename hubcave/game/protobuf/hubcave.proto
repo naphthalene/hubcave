@@ -1,28 +1,19 @@
 package hubcave;
 
 message Map {
-    message Coordinate {
-        required int32 x = 1;
-        required int32 y = 2;
-    }
     message Block {
         enum BlockType {
-            GROUND =      0;
-            WALL =        1;
+            WALL =        0;
+            GROUND =      1;
             DOOR =        2;
         }
 
-        required BlockType type = 1 [default = WALL];
-        required Coordinate coord = 2;
-    }
-
-    message BlockMatrix {
-        required uint32 rows = 1;
-        required uint32 cols = 2;
-        repeated Block data = 3;
+        required BlockType blktype = 1 [default = WALL];
+        required int32 x = 2;
+        required int32 y = 3;
     }
 
     optional string user = 1;
     optional string repository = 2;
-    optional BlockMatrix blockmatrix = 3;
+    repeated Block blockdata = 3;
 }

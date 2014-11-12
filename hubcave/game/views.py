@@ -3,6 +3,7 @@ from django_tables2 import SingleTableView
 from django.views.generic import UpdateView, DetailView, CreateView
 from django.core.urlresolvers import reverse_lazy, reverse
 from django.contrib.auth.models import User
+from django.shortcuts import redirect
 
 from hubcave.game.forms import GameUpdateForm, GameCreateForm
 from hubcave.game.models import Game
@@ -22,11 +23,15 @@ class GameDetail(DetailView):
     model = Game
     slug_field = 'repository'
 
+    def dispatch(self, request, *args, **kwargs):
+        print request
+        return super(GameDetail, self).dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(GameDetail, self).get_context_data(**kwargs)
-        # From here use self.object to gather info about the game
-        context['game_data'] = self.object.game_json()
+        self.object.generate_or_update_map()
+        context['game_data'] = self.object.map_json()
         return context
 
 class GameCreate(CreateView):

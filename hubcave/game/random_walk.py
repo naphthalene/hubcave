@@ -8,7 +8,7 @@ INITIAL_BUFFER = 30.0 # % border
 # 0 -> wall
 # 1 -> floor
 
-def gen_cave(map_size=MAP_SIZE, floor_coverage=FLOOR_COVERAGE, init_buffer=INITIAL_BUFFER):
+def random_walk(map_size=MAP_SIZE, floor_coverage=FLOOR_COVERAGE, init_buffer=INITIAL_BUFFER):
     initial_map = [[0 for j in range(map_size)] for i in range(map_size)]
 
     # Generate initial pos
@@ -44,8 +44,8 @@ def gen_cave(map_size=MAP_SIZE, floor_coverage=FLOOR_COVERAGE, init_buffer=INITI
             initial_map[current_position[0]][current_position[1]] = 1
             floor_tile_count += 1
 
-    # show(initial_map)
-    return (original_position, initial_map))
+    show(initial_map)
+    return (original_position, initial_map)
 
 def show(m):
     for i in m:

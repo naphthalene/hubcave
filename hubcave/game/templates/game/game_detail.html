@@ -15,9 +15,7 @@
 {% block content %}
 <div class="canvas-panel"></div>
 <script type="text/javascript">
-  maze = {{  }};
-  
-  widget.init(data_from_django);
+  hubcave_data = {{ game_data|safe }};
 </script>
 <script src="{% static 'js/keydrown.js' %}"></script>
 <script src="{% static 'js/game.js' %}"></script>

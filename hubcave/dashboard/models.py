@@ -24,16 +24,20 @@ class Dashboard(models.Model):
         new_repos = []
         try:
             all_games = Game.objects.filter(user=self.user)
-            all_games_repos = map(lambda g: g.repository, all_games)
-            new_repos = filter(lambda r: r.name not in all_games_repos,
-                               all_repos)
+            print all_games
+            if all_games is not None:
+                all_games_repos = map(lambda g: g.repository, all_games)
+                new_repos = filter(lambda r: r.name not in all_games_repos,
+                                   all_repos)
 
-            deleted_repos = all_games.exclude(repository__in=all_games_repos)
-            if len(deleted_repos) > 0:
-                print "Some repos have been deleted, marking them as such:\n{}".format(deleted_repos)
-                for r in deleted_repos:
-                    r.repository_deleted = True
-                    r.save()
+                deleted_repos = all_games.exclude(repository__in=all_games_repos)
+                if len(deleted_repos) > 0:
+                    print "Some repos have been deleted, marking them as such:\n{}".format(deleted_repos)
+                    for r in deleted_repos:
+                        r.repository_deleted = True
+                        r.save()
+            else:
+                raise Game.DoesNotExist()
         except Game.DoesNotExist:
             new_repos = all_repos
 

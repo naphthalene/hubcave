@@ -18,7 +18,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='hubcave.proto',
   package='hubcave',
-  serialized_pb=_b('\n\rhubcave.proto\x12\x07hubcave\"\xd8\x02\n\x03Map\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x12\n\nrepository\x18\x02 \x01(\t\x12-\n\x0b\x62lockmatrix\x18\x03 \x01(\x0b\x32\x18.hubcave.Map.BlockMatrix\x1a\"\n\nCoordinate\x12\t\n\x01x\x18\x01 \x02(\x05\x12\t\n\x01y\x18\x02 \x02(\x05\x1a\x8e\x01\n\x05\x42lock\x12\x30\n\x04type\x18\x01 \x02(\x0e\x32\x1c.hubcave.Map.Block.BlockType:\x04WALL\x12&\n\x05\x63oord\x18\x02 \x02(\x0b\x32\x17.hubcave.Map.Coordinate\"+\n\tBlockType\x12\n\n\x06GROUND\x10\x00\x12\x08\n\x04WALL\x10\x01\x12\x08\n\x04\x44OOR\x10\x02\x1aK\n\x0b\x42lockMatrix\x12\x0c\n\x04rows\x18\x01 \x02(\r\x12\x0c\n\x04\x63ols\x18\x02 \x02(\r\x12 \n\x04\x64\x61ta\x18\x03 \x03(\x0b\x32\x12.hubcave.Map.Block')
+  serialized_pb=_b('\n\rhubcave.proto\x12\x07hubcave\"\xcf\x01\n\x03Map\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x12\n\nrepository\x18\x02 \x01(\t\x12%\n\tblockdata\x18\x03 \x03(\x0b\x32\x12.hubcave.Map.Block\x1a\x7f\n\x05\x42lock\x12\x33\n\x07\x62lktype\x18\x01 \x02(\x0e\x32\x1c.hubcave.Map.Block.BlockType:\x04WALL\x12\t\n\x01x\x18\x02 \x02(\x05\x12\t\n\x01y\x18\x03 \x02(\x05\"+\n\tBlockType\x12\x08\n\x04WALL\x10\x00\x12\n\n\x06GROUND\x10\x01\x12\x08\n\x04\x44OOR\x10\x02')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -31,11 +31,11 @@ _MAP_BLOCK_BLOCKTYPE = _descriptor.EnumDescriptor(
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='GROUND', index=0, number=0,
+      name='WALL', index=0, number=0,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='WALL', index=1, number=1,
+      name='GROUND', index=1, number=1,
       options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
@@ -45,47 +45,11 @@ _MAP_BLOCK_BLOCKTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=251,
-  serialized_end=294,
+  serialized_start=191,
+  serialized_end=234,
 )
 _sym_db.RegisterEnumDescriptor(_MAP_BLOCK_BLOCKTYPE)
 
-
-_MAP_COORDINATE = _descriptor.Descriptor(
-  name='Coordinate',
-  full_name='hubcave.Map.Coordinate',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='x', full_name='hubcave.Map.Coordinate.x', index=0,
-      number=1, type=5, cpp_type=1, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='y', full_name='hubcave.Map.Coordinate.y', index=1,
-      number=2, type=5, cpp_type=1, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=115,
-  serialized_end=149,
-)
 
 _MAP_BLOCK = _descriptor.Descriptor(
   name='Block',
@@ -95,16 +59,23 @@ _MAP_BLOCK = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='type', full_name='hubcave.Map.Block.type', index=0,
+      name='blktype', full_name='hubcave.Map.Block.blktype', index=0,
       number=1, type=14, cpp_type=8, label=2,
-      has_default_value=True, default_value=1,
+      has_default_value=True, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='coord', full_name='hubcave.Map.Block.coord', index=1,
-      number=2, type=11, cpp_type=10, label=2,
-      has_default_value=False, default_value=None,
+      name='x', full_name='hubcave.Map.Block.x', index=1,
+      number=2, type=5, cpp_type=1, label=2,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='y', full_name='hubcave.Map.Block.y', index=2,
+      number=3, type=5, cpp_type=1, label=2,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -120,51 +91,8 @@ _MAP_BLOCK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=152,
-  serialized_end=294,
-)
-
-_MAP_BLOCKMATRIX = _descriptor.Descriptor(
-  name='BlockMatrix',
-  full_name='hubcave.Map.BlockMatrix',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='rows', full_name='hubcave.Map.BlockMatrix.rows', index=0,
-      number=1, type=13, cpp_type=3, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='cols', full_name='hubcave.Map.BlockMatrix.cols', index=1,
-      number=2, type=13, cpp_type=3, label=2,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='data', full_name='hubcave.Map.BlockMatrix.data', index=2,
-      number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=296,
-  serialized_end=371,
+  serialized_start=107,
+  serialized_end=234,
 )
 
 _MAP = _descriptor.Descriptor(
@@ -189,16 +117,16 @@ _MAP = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='blockmatrix', full_name='hubcave.Map.blockmatrix', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='blockdata', full_name='hubcave.Map.blockdata', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
   ],
   extensions=[
   ],
-  nested_types=[_MAP_COORDINATE, _MAP_BLOCK, _MAP_BLOCKMATRIX, ],
+  nested_types=[_MAP_BLOCK, ],
   enum_types=[
   ],
   options=None,
@@ -207,27 +135,16 @@ _MAP = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=27,
-  serialized_end=371,
+  serialized_end=234,
 )
 
-_MAP_COORDINATE.containing_type = _MAP
-_MAP_BLOCK.fields_by_name['type'].enum_type = _MAP_BLOCK_BLOCKTYPE
-_MAP_BLOCK.fields_by_name['coord'].message_type = _MAP_COORDINATE
+_MAP_BLOCK.fields_by_name['blktype'].enum_type = _MAP_BLOCK_BLOCKTYPE
 _MAP_BLOCK.containing_type = _MAP
 _MAP_BLOCK_BLOCKTYPE.containing_type = _MAP_BLOCK
-_MAP_BLOCKMATRIX.fields_by_name['data'].message_type = _MAP_BLOCK
-_MAP_BLOCKMATRIX.containing_type = _MAP
-_MAP.fields_by_name['blockmatrix'].message_type = _MAP_BLOCKMATRIX
+_MAP.fields_by_name['blockdata'].message_type = _MAP_BLOCK
 DESCRIPTOR.message_types_by_name['Map'] = _MAP
 
 Map = _reflection.GeneratedProtocolMessageType('Map', (_message.Message,), dict(
-
-  Coordinate = _reflection.GeneratedProtocolMessageType('Coordinate', (_message.Message,), dict(
-    DESCRIPTOR = _MAP_COORDINATE,
-    __module__ = 'hubcave_pb2'
-    # @@protoc_insertion_point(class_scope:hubcave.Map.Coordinate)
-    ))
-  ,
 
   Block = _reflection.GeneratedProtocolMessageType('Block', (_message.Message,), dict(
     DESCRIPTOR = _MAP_BLOCK,
@@ -235,21 +152,12 @@ Map = _reflection.GeneratedProtocolMessageType('Map', (_message.Message,), dict(
     # @@protoc_insertion_point(class_scope:hubcave.Map.Block)
     ))
   ,
-
-  BlockMatrix = _reflection.GeneratedProtocolMessageType('BlockMatrix', (_message.Message,), dict(
-    DESCRIPTOR = _MAP_BLOCKMATRIX,
-    __module__ = 'hubcave_pb2'
-    # @@protoc_insertion_point(class_scope:hubcave.Map.BlockMatrix)
-    ))
-  ,
   DESCRIPTOR = _MAP,
   __module__ = 'hubcave_pb2'
   # @@protoc_insertion_point(class_scope:hubcave.Map)
   ))
 _sym_db.RegisterMessage(Map)
-_sym_db.RegisterMessage(Map.Coordinate)
 _sym_db.RegisterMessage(Map.Block)
-_sym_db.RegisterMessage(Map.BlockMatrix)
 
 
 # @@protoc_insertion_point(module_scope)

@@ -8,7 +8,9 @@ import itertools
 
 from hubcave.core.mixins.models import TrackingFields
 from hubcave.game.mazes import min_cost_spanning_tree
+from hubcave.game.random_walk import random_walk
 from hubcave.game.protobuf.hubcave_pb2 import Map
+from protobuf_to_dict import protobuf_to_dict
 
 class Game(TrackingFields):
     user = models.ForeignKey(User)
@@ -49,7 +51,7 @@ class Game(TrackingFields):
 
     def generate_or_update_map(self):
         if self.map_data is None:
-            self.generate_map()
+            self.generate_map("cave")
         else:
             self.update_map()
 
@@ -60,25 +62,32 @@ class Game(TrackingFields):
         # print self.commits_since.totalCount
         pass
 
-    def generate_map(self):
+    def generate_map(self, type_map):
         """
         """
         # self.update_repo_magnitude()
-        map_size = 10
-        self.map_data = Map()
-        # self.map_data.user = self.user.social_auth.get(provider='github').get_username(self.user)
-        # self.map_data.repository = self.repository
+        gmap = Map()
+        gmap.user = self.user.__repr__()
+        gmap.repository = self.repository
 
-        blockmatrix = self.map_data.blockmatrix.add()
-        maze = min_cost_spanning_tree(map_size, map_size)
-        blockmatrix.rows = map_size
-        blockmatrix.cols = map_size
-        print(list(itertools.chain.from_iterable(maze)))
-        blockmatrix.data.extend(list(itertools.chain.from_iterable(maze)))
-        # self.save()
+        structure = None
+        if type_map == "cave":
+            original_position, structure = random_walk()
+        else:
+            map_size = 10
+            structure = min_cost_spanning_tree(map_size, map_size)
+        for i, row in enumerate(structure):
+            for j, el in enumerate(row):
+                blk = gmap.blockdata.add()
+                print el
+                blk.blktype = el
+                blk.x = i
+                blk.y = j
+        # print gmap.blockdata
+        self.map_data = gmap.SerializeToString()
+        self.save()
 
     def map_json(self):
-        map_size = self.map_data.blockmatrix
-        data = self.map_data.blockmatrix.data
-        matrix = [data[i:i+map_size] for i in range(0, len(data), map_size)]
-        return dumps({ "matrix" : matrix })
+        gmap = Map()
+        gmap.ParseFromString(self.map_data)
+        return dumps(protobuf_to_dict(gmap))
