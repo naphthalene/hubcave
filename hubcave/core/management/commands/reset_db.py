@@ -16,16 +16,16 @@ class Command(BaseCommand):
         """
 
         print settings
-        engine = settings.DATABASE_ENGINE
+        engine = settings.DATABASES['default']['ENGINE']
     
-        if engine == 'sqlite3':
+        if engine == 'django.db.backends.sqlite3':
             import os
             try:
                 logging.info("Unlinking sqlite3 database")
                 os.unlink(settings.DATABASE_NAME)
             except OSError:
                 pass
-        elif engine == 'mysql':
+        elif engine == 'django.db.backends.mysql':
             import MySQLdb as Database
             kwargs = {
                 'user': settings.DATABASE_USER,
@@ -44,11 +44,8 @@ class Command(BaseCommand):
             connection.query(drop_query)
             logging.info('Executing... "' + create_query + '"')
             connection.query(create_query)
-        elif engine == 'postgresql' or engine == 'postgresql_psycopg2':
-            if engine == 'postgresql':
-                import psycopg as Database
-            elif engine == 'postgresql_psycopg2':
-                import psycopg2 as Database
+        elif engine == 'django.db.backends.postgresql_psycopg2':
+            import psycopg2 as Database
     
             if settings.DATABASE_NAME == '':
                 from django.core.exceptions import ImproperlyConfigured
