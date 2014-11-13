@@ -46,7 +46,6 @@ def run_socket_server(addr, port, *args, **options):
     server = SocketIOServer(bind, handler,
                             resource="socket.io",
                             policy_server=True)
-    # import code; code.interact(local=locals())
     server.serve_forever()
 
 class Command(BaseCommand):
