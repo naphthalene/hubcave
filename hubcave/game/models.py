@@ -94,7 +94,7 @@ class Game(models.Model):
         self.map_data = gmap.SerializeToString()
         self.save()
 
-    def map_json(self):
+    def map_dict(self):
         gmap = Map()
         gmap.ParseFromString(self.map_data)
-        return dumps(protobuf_to_dict(gmap))
+        return protobuf_to_dict(gmap)

@@ -4,6 +4,9 @@ from django.views.generic import TemplateView
 
 from hubcave.core import views
 
+import socketio.sdjango
+socketio.sdjango.autodiscover()
+
 admin.autodiscover()
 
 urlpatterns = patterns(
@@ -18,4 +21,5 @@ urlpatterns = patterns(
     url('', include('hubcave.game.urls')),
     url('', include('social.apps.django_app.urls', namespace='social')),
     url('', include('django.contrib.auth.urls', namespace='auth')),
+    url("^socket\.io", include(socketio.sdjango.urls)),
 )

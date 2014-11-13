@@ -1,0 +1,9 @@
+{% extends 'game/game_detail.html' %}
+
+{% load staticfiles %}
+
+{% block game_scripts %}
+<script src="{% static 'js/socket.io.js' %}"></script>
+<script>WEB_SOCKET_SWF_LOCATION="{% static 'js/WebSocketMain.swf' %}";</script>
+<script src="{% static 'js/game_socket.js' %}"></script>
+{% endblock %}

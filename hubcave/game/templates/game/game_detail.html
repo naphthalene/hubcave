@@ -15,9 +15,11 @@
 
 {% block content %}
 <div class="canvas-panel"></div>
-<script type="text/javascript">
-  hubcave_data = {{ game_data|safe }};
-</script>
+<script type="text/javascript">game_id = {{ object.id }};</script>
+{% addtoblock "js" %}
 <script src="{% static 'js/keydrown.js' %}"></script>
+{% block game_scripts %}
+{% endblock %}
 <script src="{% static 'js/game.js' %}"></script>
+{% endaddtoblock %}
 {% endblock %}

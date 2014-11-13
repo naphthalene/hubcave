@@ -11,3 +11,4 @@ recursive-include hubcave/dashboard/templates *
 recursive-include hubcave/game/fixtures *
 recursive-include hubcave/game/static *
 recursive-include hubcave/game/templates *
+recursive-include hubcave/game/sockets.py

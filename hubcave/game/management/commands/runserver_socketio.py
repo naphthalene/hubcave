@@ -49,7 +49,10 @@ class Command(BaseCommand):
             print "SocketIOServer running on %s:%s" % bind
             print
             handler = self.get_handler(*args, **options)
-            server = SocketIOServer(bind, handler, resource="socket.io", policy_server=True)
+            server = SocketIOServer(bind, handler,
+                                    resource="socket.io",
+                                    policy_server=True)
+            # import code; code.interact(local=locals())
             server.serve_forever()
         except KeyboardInterrupt:
             if RELOAD:

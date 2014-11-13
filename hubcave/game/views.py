@@ -1,9 +1,10 @@
+from django.conf import settings
 from django.contrib import messages
 from django_tables2 import SingleTableView
+from django.shortcuts import redirect
 from django.views.generic import UpdateView, DetailView, CreateView
 from django.core.urlresolvers import reverse_lazy, reverse
 from django.contrib.auth.models import User
-from django.shortcuts import redirect
 
 from hubcave.game.forms import GameUpdateForm, GameCreateForm
 from hubcave.game.models import Game
@@ -24,14 +25,19 @@ class GameDetail(DetailView):
     slug_field = 'repository'
 
     def dispatch(self, request, *args, **kwargs):
-        print request
         return super(GameDetail, self).dispatch(request, *args, **kwargs)
+
+    def get_template_names(self):
+        if getattr(settings, 'SOCKETIO_ENABLED', False):
+            print "Sockets are enabled! Go forth and conquer"
+            return ['game/game_detail_socketio.html']
+        else:
+            return ['game/game_detail.html']
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(GameDetail, self).get_context_data(**kwargs)
         self.object.generate_or_update_map()
-        context['game_data'] = self.object.map_json()
         return context
 
 class GameCreate(CreateView):
