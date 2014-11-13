@@ -18,7 +18,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='hubcave.proto',
   package='hubcave',
-  serialized_pb=_b('\n\rhubcave.proto\x12\x07hubcave\"\xf7\x01\n\x03Map\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x12\n\nrepository\x18\x02 \x01(\t\x12%\n\tblockdata\x18\x03 \x03(\x0b\x32\x12.hubcave.Map.Block\x12\x12\n\nstarting_x\x18\x05 \x01(\x05\x12\x12\n\nstarting_y\x18\x06 \x01(\x05\x1a\x7f\n\x05\x42lock\x12\x33\n\x07\x62lktype\x18\x01 \x02(\x0e\x32\x1c.hubcave.Map.Block.BlockType:\x04WALL\x12\t\n\x01x\x18\x02 \x02(\x05\x12\t\n\x01y\x18\x03 \x02(\x05\"+\n\tBlockType\x12\x08\n\x04WALL\x10\x00\x12\n\n\x06GROUND\x10\x01\x12\x08\n\x04\x44OOR\x10\x02')
+  serialized_pb=_b('\n\rhubcave.proto\x12\x07hubcave\"\xd5\x01\n\x03Map\x12%\n\tblockdata\x18\x03 \x03(\x0b\x32\x12.hubcave.Map.Block\x12\x12\n\nstarting_x\x18\x05 \x01(\x05\x12\x12\n\nstarting_y\x18\x06 \x01(\x05\x1a\x7f\n\x05\x42lock\x12\x33\n\x07\x62lktype\x18\x01 \x02(\x0e\x32\x1c.hubcave.Map.Block.BlockType:\x04WALL\x12\t\n\x01x\x18\x02 \x02(\x05\x12\t\n\x01y\x18\x03 \x02(\x05\"+\n\tBlockType\x12\x08\n\x04WALL\x10\x00\x12\n\n\x06GROUND\x10\x01\x12\x08\n\x04\x44OOR\x10\x02')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -45,8 +45,8 @@ _MAP_BLOCK_BLOCKTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=231,
-  serialized_end=274,
+  serialized_start=197,
+  serialized_end=240,
 )
 _sym_db.RegisterEnumDescriptor(_MAP_BLOCK_BLOCKTYPE)
 
@@ -91,8 +91,8 @@ _MAP_BLOCK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=147,
-  serialized_end=274,
+  serialized_start=113,
+  serialized_end=240,
 )
 
 _MAP = _descriptor.Descriptor(
@@ -103,35 +103,21 @@ _MAP = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='user', full_name='hubcave.Map.user', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='repository', full_name='hubcave.Map.repository', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='blockdata', full_name='hubcave.Map.blockdata', index=2,
+      name='blockdata', full_name='hubcave.Map.blockdata', index=0,
       number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='starting_x', full_name='hubcave.Map.starting_x', index=3,
+      name='starting_x', full_name='hubcave.Map.starting_x', index=1,
       number=5, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='starting_y', full_name='hubcave.Map.starting_y', index=4,
+      name='starting_y', full_name='hubcave.Map.starting_y', index=2,
       number=6, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -149,7 +135,7 @@ _MAP = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=27,
-  serialized_end=274,
+  serialized_end=240,
 )
 
 _MAP_BLOCK.fields_by_name['blktype'].enum_type = _MAP_BLOCK_BLOCKTYPE

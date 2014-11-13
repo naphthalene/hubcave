@@ -13,8 +13,6 @@ message Map {
         required int32 y = 3;
     }
 
-    optional string user = 1;
-    optional string repository = 2;
     repeated Block blockdata = 3;
     optional int32 starting_x = 5;
     optional int32 starting_y = 6;
