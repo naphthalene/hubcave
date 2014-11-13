@@ -21,6 +21,34 @@ def reload_watcher():
             kill(getpid(), SIGINT)
         sleep(1)
 
+def get_handler(*args, **options):
+    """
+    Returns the django.contrib.staticfiles handler.
+    """
+    handler = WSGIHandler()
+    try:
+        from django.contrib.staticfiles.handlers import StaticFilesHandler
+    except ImportError:
+        return handler
+    use_static_handler = options.get('use_static_handler', True)
+    insecure_serving = options.get('insecure_serving', False)
+    if (settings.DEBUG and use_static_handler or
+            (use_static_handler and insecure_serving)):
+        handler = StaticFilesHandler(handler)
+    return handler
+
+def run_socket_server(addr, port, *args, **options):
+    bind = (addr, int(port))
+    print
+    print "SocketIOServer running on %s:%s" % bind
+    print
+    handler = get_handler(*args, **options)
+    server = SocketIOServer(bind, handler,
+                            resource="socket.io",
+                            policy_server=True)
+    # import code; code.interact(local=locals())
+    server.serve_forever()
+
 class Command(BaseCommand):
 
     def handle(self, addrport="", *args, **options):
@@ -44,16 +72,7 @@ class Command(BaseCommand):
 
         start_new_thread(reload_watcher, ())
         try:
-            bind = (self.addr, int(self.port))
-            print
-            print "SocketIOServer running on %s:%s" % bind
-            print
-            handler = self.get_handler(*args, **options)
-            server = SocketIOServer(bind, handler,
-                                    resource="socket.io",
-                                    policy_server=True)
-            # import code; code.interact(local=locals())
-            server.serve_forever()
+            run_socket_server(self.addr, self.port, *args, **options)
         except KeyboardInterrupt:
             if RELOAD:
                 server.stop()
@@ -61,19 +80,3 @@ class Command(BaseCommand):
                 restart_with_reloader()
             else:
                 raise
-
-    def get_handler(self, *args, **options):
-        """
-        Returns the django.contrib.staticfiles handler.
-        """
-        handler = WSGIHandler()
-        try:
-            from django.contrib.staticfiles.handlers import StaticFilesHandler
-        except ImportError:
-            return handler
-        use_static_handler = options.get('use_static_handler', True)
-        insecure_serving = options.get('insecure_serving', False)
-        if (settings.DEBUG and use_static_handler or
-                (use_static_handler and insecure_serving)):
-            handler = StaticFilesHandler(handler)
-        return handler
