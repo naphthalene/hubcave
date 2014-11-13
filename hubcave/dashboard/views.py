@@ -4,13 +4,12 @@ from django.contrib.auth.models import User
 from hubcave.dashboard.view_mixins import CacheViewMixin
 from django.contrib.sessions.models import Session
 
+from hubcave.game.models import Game
+
 from datetime import datetime
 
-class DashboardView(CacheViewMixin, TemplateView):
+class DashboardView(TemplateView):
     template_name = 'dashboard.html'
-
-    def get_cache_params(self, *args, **kwargs):
-        return ('dashboard', 60 * 15)
 
     def active_users(self):
         # Query all non-expired sessions
@@ -31,4 +30,6 @@ class DashboardView(CacheViewMixin, TemplateView):
         dash = Dashboard.objects.get_or_create(user=self.request.user)[0]
         dash.get_or_update_games()
         context['sidebar_users'] = self.active_users()
+        context['sidebar_games'] = Game.objects.filter(user=self.request.user)
+        print self.request.user.username
         return context

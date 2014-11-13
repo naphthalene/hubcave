@@ -70,8 +70,6 @@ class Game(models.Model):
         """
         # self.update_repo_magnitude()
         gmap = Map()
-        gmap.user = self.user.__repr__()
-        gmap.repository = self.repository
 
         structure = None
         if self.map_type == "cave":

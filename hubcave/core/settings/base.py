@@ -78,7 +78,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'social.apps.django_app.context_processors.backends',
     'social.apps.django_app.context_processors.login_redirect',
     'sekizai.context_processors.sekizai',
-    'hubcave.core.context_processors.sidebar_lists',
 )
 
 # Social Auth

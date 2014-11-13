@@ -25,7 +25,7 @@ class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
 
     def on_join(self, game_id):
         self.game = Game.objects.get(pk=game_id)
-        self.broadcast_event('loading', self.game.map_dict())
+        self.emit('loading', self.game.map_dict())
         return True
 
     def recv_disconnect(self):
