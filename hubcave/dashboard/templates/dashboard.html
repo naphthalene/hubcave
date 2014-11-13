@@ -20,8 +20,8 @@
   <div class="panel panel-default">
     <div class="panel-heading">Active Friends</div>
     <div class="panel-body">
-      {% for user in active_users %}
-      <a href="#" {{ user.id }}>/a></br>
+      {% for user in sidebar_users %}
+      <a href="#" {{ user }}></a></br>
       {% endfor %}
     </div>
   </div>

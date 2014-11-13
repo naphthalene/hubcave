@@ -18,7 +18,7 @@ class Game(models.Model):
     map_data = models.BinaryField(null=True)
     starting_x = models.IntegerField(null=True)
     starting_y = models.IntegerField(null=True)
-    map_type = models.CharField(max_length=255, default="cave")
+    map_type = models.CharField(max_length=255, default="maze")
     size = models.IntegerField(null=True)
     commits = models.IntegerField(null=True)
     points_spent = models.IntegerField(default=0)

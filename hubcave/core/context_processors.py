@@ -9,7 +9,7 @@ from datetime import datetime
 def sidebar_lists(request):
     context = {}
     context['sidebar_games'] = Game.objects.filter(user_id=request.user.id)
-    context['sidebar_users'] = get_user_model().objects.all()
+    context['sidebar_users'] = active_users()
     return context
 
 def active_users():
@@ -23,4 +23,4 @@ def active_users():
         uid_list.append(data.get('_auth_user_id', None))
 
     # Query all logged in users based on id list
-    return {'active_users' : User.objects.filter(id__in=uid_list)}
+    return User.objects.filter(id__in=uid_list)
