@@ -14,4 +14,4 @@ from hubcave.game.management.commands.runserver_socketio import Command
 
 from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
-socketio_application = Command.get_handler()
+socketio_application = Command().get_handler()
