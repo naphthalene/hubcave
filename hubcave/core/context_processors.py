@@ -9,18 +9,4 @@ from datetime import datetime
 def sidebar_lists(request):
     context = {}
     context['sidebar_games'] = Game.objects.filter(user_id=request.user.id)
-    context['sidebar_users'] = active_users()
     return context
-
-def active_users():
-    # Query all non-expired sessions
-    sessions = Session.objects.filter(expire_date__gte=datetime.now())
-    uid_list = []
-
-    # Build a list of user ids from that query
-    for session in sessions:
-        data = session.get_decoded()
-        uid_list.append(data.get('_auth_user_id', None))
-
-    # Query all logged in users based on id list
-    return User.objects.filter(id__in=uid_list)

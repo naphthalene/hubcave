@@ -2,8 +2,8 @@ from random import random
 from math import floor
 
 MAP_SIZE = 30
-FLOOR_COVERAGE = 40.0 # %
-INITIAL_BUFFER = 30.0 # % border
+FLOOR_COVERAGE = 35.0 # %
+INITIAL_BUFFER = 5.0 # % border
 
 # 0 -> wall
 # 1 -> floor
@@ -13,6 +13,7 @@ def random_walk(map_size=MAP_SIZE, floor_coverage=FLOOR_COVERAGE, init_buffer=IN
 
     # Generate initial pos
     offset = int(map_size * (init_buffer / 100.0))
+    print offset
     current_position = (offset + int(floor(random() * (map_size - 2 * offset))),
                         offset + int(floor(random() * (map_size - 2 * offset))))
     original_position = current_position
@@ -34,10 +35,10 @@ def random_walk(map_size=MAP_SIZE, floor_coverage=FLOOR_COVERAGE, init_buffer=IN
         new_position = None
         while new_position is None:
             new_position = positions[floor(random() * 4)]
-            if (new_position[0] < 0 or
-                new_position[1] < 0 or
-                new_position[0] >= map_size or
-                new_position[1] >= map_size):
+            if (new_position[0] <= offset or
+                new_position[1] <= offset or
+                new_position[0] >= map_size - offset or
+                new_position[1] >= map_size - offset):
                 new_position = None
         current_position = new_position
         if initial_map[current_position[0]][current_position[1]] == 0:
