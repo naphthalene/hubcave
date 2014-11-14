@@ -128,6 +128,36 @@ function run_game() {
 
     stage.addChild(scrollArea);
 
+    // Add ui overlay
+    // Bow is default item at '1'
+    // Items/keys -> map 2-0 keys to select
+    // HP/ammo
+    player_hp = 100;
+    player_ammo = 500;
+    player_items = {};
+    ui_show = true;
+
+    ui = new PIXI.DisplayObjectContainer();
+    ui.position.x = 0;
+    ui.position.y = 0;
+    ui.width = render_size;
+    ui.height = blocksize;
+    ui.interactive = true;
+
+    hitpoints_counter = new PIXI.Text(player_hp.toString());
+    ui.addChild(hitpoints_counter);
+    stage.addChild(ui);
+
+    function update_ui(){
+        if (ui_show){
+            // ui.removeChild(hitpoints_counter);
+            hitpoints_counter.setText(player_hp.toString());
+            // ui.addChild(hitpoints_counter);
+        }
+    }
+
+    update_ui();
+
     movespeed = blocksize / 20;
     shootspeed = blocksize / 20;
     rotatespeed = Math.PI / 100;
@@ -232,6 +262,8 @@ function run_game() {
         var p = new PIXI.Sprite(projectileTexture);
         shootProjectile(user_id, player_sprite.position, player_sprite.rotation);
         emit_projectile_data();
+        ammo -= 1;
+        console.log("Remaining ammo");
     };
 
 
@@ -337,8 +369,8 @@ function run_game() {
                 if (user != user_id && 
                     is_intersecting(projectiles[user][i], player_sprite)){
                     hit_user = true;
-                    console.log("You got hit");
-                    // TODO Update hp here
+                    console.log("You got hit", player_hp);
+                    player_hp -= 1;
                 }
                 if (projectiles[user][i].distanceTraveled > projectiles[user][i].lifedist
                     || colliding_with_map(projectiles[user][i])
@@ -353,6 +385,7 @@ function run_game() {
     function animate() {
         handle_input();
         update_projectiles();
+        update_ui();
         requestAnimFrame( animate );
         renderer.render(stage);
     }
