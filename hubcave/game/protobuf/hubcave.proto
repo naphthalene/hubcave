@@ -1,8 +1,8 @@
 package hubcave;
 
 message Player {
-    optional int32 x = 0;
-    optional int32 y = 1;
+    optional float x = 0;
+    optional float y = 1;
     optional float rotation = 2;
     optional int32 id = 3;
 }
