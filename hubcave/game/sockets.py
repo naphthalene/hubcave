@@ -45,8 +45,14 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         return True
 
     def on_projectile(self, data):
-        print data
         self.emit_to_room(str(self.game_id), 'projectile', data)
+        return True
+
+    def on_msg(self, data):
+        print("[Room {}]({}) {}".format(str(self.game_id),
+                                        data['user_name'],
+                                        data['text']))
+        self.emit_to_room(str(self.game_id), 'msg', data)
         return True
 
     def on_player(self, data):

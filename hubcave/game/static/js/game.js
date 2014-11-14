@@ -3,6 +3,10 @@
 //   return "Quit game?";
 // };
 
+// Disable the chat window initially
+$('#chat_input').toggle(false);
+$('#chat_input').width($('.chat-panel').width() - 50);
+
 socket = io.connect("/game", {
                         transports: ['websocket',
                                      'flashsocket',
@@ -23,8 +27,8 @@ function run_game() {
     var stage = new PIXI.Stage(0x000000);
     graphics = new PIXI.Graphics();
 
-    var render_size = Math.min(window.innerWidth - 50,
-                               window.innerHeight - 150);
+    var render_size = Math.min($('#game_panel').width() - 50,
+                               $('#game_panel').width());
 
 
     var renderer = PIXI.autoDetectRenderer(render_size,
@@ -45,7 +49,8 @@ function run_game() {
     var blocksize = 50;
 
     renderer.view.className = "rendererView";
-    document.body.appendChild(renderer.view);
+    $('.canvas-panel').append(renderer.view);
+    $('#chat_input').width($('.rendererView').width());
 
     //
     // Build out the map sprites according to blockdata
@@ -164,7 +169,7 @@ function run_game() {
     ui.addChild(ammo_counter);
 
     stage.addChild(ui);
-    
+
     // var ui_panel = new PIXI.DisplayObjectContainer();
     // ui_panel.position.x = 15;
     // ui_panel.position.y = 15;
@@ -175,7 +180,7 @@ function run_game() {
 
     // ui_panel.buttonMode = true;
     // ui.addChild(ui_panel);
-    
+
     // hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
     //                                   { fill: 'white' });
 
@@ -195,7 +200,7 @@ function run_game() {
 
     movespeed = blocksize / 20;
     shootspeed = blocksize / 20;
-    rotatespeed = Math.PI / 100;
+    rotatespeed = Math.PI / 50;
     edge_buffer = render_size / 3;
 
     scrollArea.position.x = -(player_sprite.position.x * scrollArea.scale.x);
@@ -203,7 +208,7 @@ function run_game() {
 
     // Update world on state event
     socket.on('pstate', function (data) {
-                  
+
                   var user_sprite = null;
                   if (user_sprites[data.data.id]) {
                       user_sprite = user_sprites[data.data.id];
@@ -219,7 +224,7 @@ function run_game() {
                       user_sprite.position.x = data.data.x;
                       user_sprite.position.y = data.data.y;
                       user_sprite.rotation = data.data.rot;
-                      
+
                       var nick = new PIXI.Text(data.data.user_name,
                                                {
                                                    font: 'bold 12px Arial'
@@ -229,7 +234,7 @@ function run_game() {
                       console.log("Adding new sprite for user " + data.data.id);
                       user_sprites[data.data.id] = user_sprite;
                       scrollArea.addChild(user_sprite);
-                      
+
                   }
               });
 
@@ -278,14 +283,24 @@ function run_game() {
         p.scale.y = 12 / blocksize;
         p.lifedist = blocksize * 5;
         p.distanceTraveled = 0;
-        if (!projectiles[user]) { projectiles[user] = []; }; 
+        if (!projectiles[user]) { projectiles[user] = []; };
         projectiles[user].push(p);
         scrollArea.addChild(p);
-    };    
-    
+    };
+
+    socket.on('msg', function (data) {
+                  // Received message from someone
+                  $("#room_chat ul").append(
+                      '<li>' +
+                          '<a href=/profile/' + data.user_id + '>' +
+                          data.user_name + ' </a><span> ' +
+                          data.text +
+                          '</li>');
+              });
+
     socket.on('projectile', function (data) {
                   // A projectile has been fired, keep track of its location locally
-                  shootProjectile(data.data.user, 
+                  shootProjectile(data.data.user,
                                   new PIXI.Point(data.data.start_x,
                                                  data.data.start_y),
                                   data.data.start_rot);
@@ -297,7 +312,6 @@ function run_game() {
             shootProjectile(user_id, player_sprite.position, player_sprite.rotation);
             emit_projectile_data();
             player_ammo -= 1;
-            console.log("Remaining ammo ", player_ammo);
         }
     };
 
@@ -320,8 +334,8 @@ function run_game() {
     }
 
     function is_intersecting(r1, r2) {
-        return !(r2.x > (r1.x + r1.width)  || 
-                 (r2.x + r2.width ) < r1.x || 
+        return !(r2.x > (r1.x + r1.width)  ||
+                 (r2.x + r2.width ) < r1.x ||
                  r2.y > (r1.y + r1.height) ||
                  (r2.y + r2.height) < r1.y);
 
@@ -350,40 +364,102 @@ function run_game() {
                     });
     }
 
-    function handle_input() {
-        var original_position = {
-            x: player_sprite.x,
-            y: player_sprite.y
-        };
-        var do_emit = true;
-        if (kd.A.isDown()) {
-            player_sprite.position.x -= movespeed;
-        }
-        else if (kd.D.isDown()) {
-            player_sprite.position.x += movespeed;
-        }
-        else if (kd.W.isDown()) {
-            player_sprite.position.y -= movespeed;
-        }
-        else if (kd.S.isDown()) {
-            player_sprite.position.y += movespeed;
-        }
-        else {
-            do_emit = false;
-        }
+    var typing = false;
 
-        if (colliding_with_map(player_sprite)) {
-            player_sprite.position.x = original_position.x;
-            player_sprite.position.y = original_position.y;
-        }
-        // vignette_position();
-        update_scroll();
-        if (do_emit) {
-            emit_player_data();
+    kd.T.up(function() {
+                var chat_input = $('#chat_input');
+                if (!typing) {
+                    chat_input.toggle(true);
+                    $('#chat_input').width($('.chat-panel').width() - 50);
+                    typing = true;
+                    chat_input.focus();
+                }
+            });
+
+    kd.SPACE.up(function() {
+                      if (player_ammo > 0) {
+                          var p = new PIXI.Sprite(projectileTexture);
+                          shootProjectile(user_id, player_sprite.position, player_sprite.rotation);
+                          emit_projectile_data();
+                          player_ammo -= 1;
+                      }
+                  });
+
+    kd.ESC.up(function() {
+                  var chat_input = $('#chat_input');
+                  if (typing) {
+                      chat_input.toggle(false);
+                      $('#chat_input').width($('.chat-panel').width() - 50);
+                      typing = false;
+                      $('.rendererView').focus();
+                  }
+              });
+
+    kd.ENTER.up(function() {
+                    var chat_input = $('#chat_input'),
+                        chat_msg = chat_input.val();
+                    if (typing && chat_msg != "") {
+                        console.log(user_name, " is submitting ", chat_msg);
+                        socket.emit('msg', {
+                                        user_id: user_id,
+                                        user_name: user_name,
+                                        text: chat_msg
+                                    });
+                        $("#room_chat ul").append(
+                            '<li>' +
+                                '<a href=/profile/' + user_id + '>' +
+                                user_name + ' </a><span> ' +
+                                chat_msg +
+                                '</li>');
+                        chat_input.val("");
+                        $('#chat_input').toggle(false);
+                        $('#chat_input').width($('.chat-panel').width() - 50);
+                        typing = false;
+                        $('.rendererView').focus();
+                    }
+            });
+
+    function handle_input() {
+        if (!typing) {
+            var original_position = {
+                x: player_sprite.x,
+                y: player_sprite.y
+            };
+            var do_emit = true;
+            if (kd.A.isDown()) {
+                player_sprite.position.x -= movespeed;
+            }
+            else if (kd.D.isDown()) {
+                player_sprite.position.x += movespeed;
+            }
+            else if (kd.W.isDown()) {
+                player_sprite.position.y -= movespeed;
+            }
+            else if (kd.S.isDown()) {
+                player_sprite.position.y += movespeed;
+            }
+            else {
+                do_emit = false;
+            }
+            if (kd.RIGHT.isDown()) {
+                player_sprite.rotation += rotatespeed;
+            }
+            else if (kd.LEFT.isDown()) {
+                player_sprite.rotation -= rotatespeed;
+            }
+
+            if (colliding_with_map(player_sprite)) {
+                player_sprite.position.x = original_position.x;
+                player_sprite.position.y = original_position.y;
+            }
+            // vignette_position();
+            update_scroll();
+            if (do_emit) {
+                emit_player_data();
+            }
         }
     }
 
-    
 
     function update_projectiles() {
         // See if you can refactor, this might get really slow
@@ -395,13 +471,13 @@ function run_game() {
                 var hit_user = false;
                 for (var user_sprite in user_sprites){
                     var s = user_sprites[user_sprite];
-                    if (user != user_sprite && 
+                    if (user != user_sprite &&
                         is_intersecting(s, projectiles[user][i])){
                         hit_user = true;
                         // TODO Update hp here
                     }
                 }
-                if (user != user_id && 
+                if (user != user_id &&
                     is_intersecting(projectiles[user][i], player_sprite)){
                     hit_user = true;
                     console.log("You got hit", player_hp);

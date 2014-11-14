@@ -13,8 +13,28 @@
 {% endblock head %}
 
 
-{% block content %}
-<div class="canvas-panel"></div>
+{% block wrapper %}
+<div class="col-lg-8">
+  <div class="panel panel-default">
+    <div class="panel-heading">{{ object.user.username }}/{{ object.repository }}</div>
+    <div class="panel-body" id="game_panel">
+      <div class="canvas-panel"></div>
+    </div>
+  </div>
+</div>
+<div class="col-lg-4">
+  <div class="panel panel-default">
+    <div class="panel-heading">Chat</div>
+    <div class="panel-body" id="room_chat">
+      <div class="chat-panel">
+        <input id="chat_input" type="text" class="form-control" placeholder="Chat here..."></input>
+      </div>
+      <ul>
+      </ul>
+    </div>
+  </div>
+</div>
+
 <script type="text/javascript">
   game_id = {{ object.id }};
   user_id = {{ user_id }};
