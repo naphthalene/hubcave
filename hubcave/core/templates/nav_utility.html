@@ -20,6 +20,7 @@
                     <li class="dropdown">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#"> &nbsp;{{ user.get_full_name|default:user.username }} <b class="caret"></b></a>
                         <ul class="dropdown-menu">
+                            <li><a href="{% url 'userprofile_profile' user.id %}?next={{ request.path }}">My Profile</a></li>
                             <li class="divider"></li>
                             <li><a href="{% url 'auth:logout' %}?next={{ request.path }}">Logout</a></li>
                         </ul>
