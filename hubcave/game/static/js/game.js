@@ -4,8 +4,10 @@
 //   return "Quit game?";
 // };
 
+var ProtoBuf = dcodeIO.ProtoBuf;
+
 // PROTOBUFS for socket comm
-var game = ProtoBuf.loadProtoFile("/static/pbuf/hubcave.proto");
+var game_pbuf = ProtoBuf.loadProtoFile("/static/pbuf/hubcave.proto");
 
 socket = io.connect("/game", {
                         transports: ['websocket',
@@ -233,8 +235,12 @@ function run_game() {
         vignette_position();
         update_scroll();
         if (do_emit) {
-            socket.emit('player', {kind: 'position',
-                                   data:  player_sprite.position});
+            var player_data = game_pbuf.build("Player");
+            player_data.x = player_sprite.position.x;
+            player_data.y = player_sprite.position.y;
+            player_data.rotation = player_sprite.rotation;
+            
+            socket.emit('player', player_data.encode().toArrayBuffer());
         }
     }
 

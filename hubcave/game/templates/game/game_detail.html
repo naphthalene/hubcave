@@ -17,10 +17,11 @@
 <div class="canvas-panel"></div>
 <script type="text/javascript">game_id = {{ object.id }};</script>
 {% addtoblock "js" %}
-<script src="{% static 'js/protobuf.min.js' %}"></script>
 <script src="{% static 'js/keydrown.js' %}"></script>
 {% block game_scripts %}
 {% endblock %}
+<script src="{% static 'js/bytebuffer.js' %}"></script>
+<script src="{% static 'js/protobuf.js' %}"></script>
 <script src="{% static 'js/game.js' %}"></script>
 {% endaddtoblock %}
 {% endblock %}
