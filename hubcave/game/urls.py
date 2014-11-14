@@ -14,7 +14,7 @@ urlpatterns = patterns(
     url(r'^game/create/(?P<slug>[a-zA-Z0-9_\-]+)$',
         login_required(views.GameCreate.as_view(), login_url='/'),
         name='game_game_create'),
-    url(r'^game/(?P<slug>[a-zA-Z0-9_\-]+)/$',
+    url(r'^game/(?P<pk>\w+)/$',
         login_required(views.GameDetail.as_view(), login_url='/'),
         name='game_game'),
 )

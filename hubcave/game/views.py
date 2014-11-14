@@ -22,7 +22,6 @@ class GameList(SingleTableView):
 
 class GameDetail(DetailView):
     model = Game
-    slug_field = 'repository'
 
     def dispatch(self, request, *args, **kwargs):
         return super(GameDetail, self).dispatch(request, *args, **kwargs)

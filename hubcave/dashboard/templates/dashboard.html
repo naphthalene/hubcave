@@ -11,7 +11,7 @@
     <div class="panel-heading">Games</div>
     <div class="panel-body">
       {% for game in sidebar_games %}
-      <a href="{% url 'game_game' game.repository %}">{{ game }}</a><br/>
+      <a href="{% url 'game_game' game.id %}">{{ game }}</a><br/>
       {% empty %}
       No Games<br/>
       {% endfor %}

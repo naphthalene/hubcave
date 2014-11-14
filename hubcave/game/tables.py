@@ -14,7 +14,7 @@ class GameTable(PaginateTable):
             # Show page to update repository
             'title' : '<i class="glyphicon glyphicon-file"></i>',
             'url' : 'game_game_update',
-            'args' : [tables.A('repository')],
+            'args' : [tables.A('user'), tables.A('repository')],
             'attrs': {
                 'data-toggle': 'tooltip',
                 'title': 'View Project',

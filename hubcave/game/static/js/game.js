@@ -87,19 +87,28 @@ function run_game() {
 
     user_sprites = {};
 
+    // Bow is default item at '1'
+    // Items/keys -> map 2-0 keys to select
+    // HP/ammo
+
     player_sprite = new PIXI.Sprite(charTexture);
     player_sprite.width = blocksize / 2;
     player_sprite.height = blocksize / 2;
-    if(typeof hubcave_data.starting_x === 'undefined' ||
-       typeof hubcave_data.starting_y === 'undefined') {
-        player_sprite.position.y = player_sprite.height / 2;
-        player_sprite.position.x = blocksize + player_sprite.width / 2;
-    } else {
-        player_sprite.position.y = parseInt(hubcave_data.starting_x * blocksize +
-                                            player_sprite.width / 2);
-        player_sprite.position.x = parseInt(hubcave_data.starting_y * blocksize +
-                                            player_sprite.height / 2);
-    }
+    function reset_player() {
+        if(typeof hubcave_data.starting_x === 'undefined' ||
+           typeof hubcave_data.starting_y === 'undefined') {
+            player_sprite.position.y = player_sprite.height / 2;
+            player_sprite.position.x = blocksize + player_sprite.width / 2;
+        } else {
+            player_sprite.position.y = parseInt(hubcave_data.starting_x * blocksize +
+                                                player_sprite.width / 2);
+            player_sprite.position.x = parseInt(hubcave_data.starting_y * blocksize +
+                                                player_sprite.height / 2);
+        }
+        player_hp = 100;
+        player_ammo = 500;
+        player_items = {};
+    }; reset_player();
 
     player_sprite.pivot.x = player_sprite.width;
     player_sprite.pivot.y = player_sprite.height;
@@ -129,12 +138,6 @@ function run_game() {
     stage.addChild(scrollArea);
 
     // Add ui overlay
-    // Bow is default item at '1'
-    // Items/keys -> map 2-0 keys to select
-    // HP/ammo
-    player_hp = 100;
-    player_ammo = 500;
-    player_items = {};
     ui_show = true;
 
     ui = new PIXI.DisplayObjectContainer();
@@ -144,15 +147,46 @@ function run_game() {
     ui.height = blocksize;
     ui.interactive = true;
 
-    hitpoints_counter = new PIXI.Text(player_hp.toString(),
+    // ui.drawRect(15, 15, render_size - 15, blocksize - 15);
+
+    hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
                                       { fill: 'white' });
+    hitpoints_counter.x = 15;
+    hitpoints_counter.y = 15;
+
     ui.addChild(hitpoints_counter);
+
+    ammo_counter = new PIXI.Text("Ammo: " + player_ammo.toString(),
+                                      { fill: 'white' });
+    ammo_counter.x = 30 + hitpoints_counter.width;
+    ammo_counter.y = 15;
+
+    ui.addChild(ammo_counter);
+
     stage.addChild(ui);
+    
+    // var ui_panel = new PIXI.DisplayObjectContainer();
+    // ui_panel.position.x = 15;
+    // ui_panel.position.y = 15;
+    // ui_panel.width = render_size - 15;
+    // ui_panel.height = blocksize - 15;
+    // ui_panel.interactive = true;
+    // ui_panel.alpha = 0.5;
+
+    // ui_panel.buttonMode = true;
+    // ui.addChild(ui_panel);
+    
+    // hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
+    //                                   { fill: 'white' });
+
+    // ui_panel.addChild(hitpoints_counter);
+    // stage.addChild(ui);
 
     function update_ui(){
         if (ui_show){
             // ui.removeChild(hitpoints_counter);
-            hitpoints_counter.setText(player_hp.toString());
+            hitpoints_counter.setText("HP: " + player_hp.toString());
+            ammo_counter.setText("Ammo: " + player_ammo.toString());
             // ui.addChild(hitpoints_counter);
         }
     }
@@ -166,30 +200,6 @@ function run_game() {
 
     scrollArea.position.x = -(player_sprite.position.x * scrollArea.scale.x);
     scrollArea.position.y = -(player_sprite.position.y * scrollArea.scale.y);
-
-    // Another user joined
-    socket.on('joined', function (data) {
-                  var user_sprite = null;
-                  user_sprite = new PIXI.Sprite(charTexture);
-                  user_sprite.width = blocksize / 2;
-                  user_sprite.height = blocksize / 2;
-                  user_sprite.pivot.x = user_sprite.width;
-                  user_sprite.pivot.y = user_sprite.height;
-                  user_sprite.position.x = data.data.x;
-                  user_sprite.position.y = data.data.y;
-                  user_sprite.rotation = data.data.rot;
-                  
-                  var nick = new PIXI.Text(data.data.user_name,
-                                           {
-                                               font: 'bold 12px Arial'
-                                           });
-                  user_sprite.addChild(nick);
-
-                  console.log("Adding new sprite for user " + data.data.id);
-                  user_sprites[data.data.id] = user_sprite;
-                  scrollArea.addChild(user_sprite);
-              });
-
 
     // Update world on state event
     socket.on('pstate', function (data) {
@@ -282,11 +292,13 @@ function run_game() {
               });
 
     scrollArea.mousedown = function(idata) {
-        var p = new PIXI.Sprite(projectileTexture);
-        shootProjectile(user_id, player_sprite.position, player_sprite.rotation);
-        emit_projectile_data();
-        ammo -= 1;
-        console.log("Remaining ammo");
+        if (player_ammo > 0) {
+            var p = new PIXI.Sprite(projectileTexture);
+            shootProjectile(user_id, player_sprite.position, player_sprite.rotation);
+            emit_projectile_data();
+            player_ammo -= 1;
+            console.log("Remaining ammo ", player_ammo);
+        }
     };
 
 
@@ -394,6 +406,9 @@ function run_game() {
                     hit_user = true;
                     console.log("You got hit", player_hp);
                     player_hp -= 1;
+                    if (player_hp <= 0) {
+                        reset_player();
+                    }
                 }
                 if (projectiles[user][i].distanceTraveled > projectiles[user][i].lifedist
                     || colliding_with_map(projectiles[user][i])
