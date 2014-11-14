@@ -377,7 +377,7 @@ function run_game() {
             });
 
     kd.SPACE.up(function() {
-                      if (player_ammo > 0) {
+                      if (!typing && player_ammo > 0) {
                           var p = new PIXI.Sprite(projectileTexture);
                           shootProjectile(user_id, player_sprite.position, player_sprite.rotation);
                           emit_projectile_data();
