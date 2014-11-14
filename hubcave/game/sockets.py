@@ -34,6 +34,14 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         self.user = User.objects.get(pk=user_id)
         self.join(str(self.game_id))
         self.emit('loading', self.game.map_dict())
+        self.emit_to_room(str(self.game_id), 'joined', {
+            'data' : {
+                'id': user_id,
+                'user_name' : self.user.username,
+                'x' : self.game.starting_x,
+                'y' : self.game.starting_y
+            }
+        })
         return True
 
     def on_projectile(self, data):

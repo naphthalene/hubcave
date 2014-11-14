@@ -144,7 +144,8 @@ function run_game() {
     ui.height = blocksize;
     ui.interactive = true;
 
-    hitpoints_counter = new PIXI.Text(player_hp.toString());
+    hitpoints_counter = new PIXI.Text(player_hp.toString(),
+                                      { fill: 'white' });
     ui.addChild(hitpoints_counter);
     stage.addChild(ui);
 
@@ -166,6 +167,30 @@ function run_game() {
     scrollArea.position.x = -(player_sprite.position.x * scrollArea.scale.x);
     scrollArea.position.y = -(player_sprite.position.y * scrollArea.scale.y);
 
+    // Another user joined
+    socket.on('joined', function (data) {
+                  var user_sprite = null;
+                  user_sprite = new PIXI.Sprite(charTexture);
+                  user_sprite.width = blocksize / 2;
+                  user_sprite.height = blocksize / 2;
+                  user_sprite.pivot.x = user_sprite.width;
+                  user_sprite.pivot.y = user_sprite.height;
+                  user_sprite.position.x = data.data.x;
+                  user_sprite.position.y = data.data.y;
+                  user_sprite.rotation = data.data.rot;
+                  
+                  var nick = new PIXI.Text(data.data.user_name,
+                                           {
+                                               font: 'bold 12px Arial'
+                                           });
+                  user_sprite.addChild(nick);
+
+                  console.log("Adding new sprite for user " + data.data.id);
+                  user_sprites[data.data.id] = user_sprite;
+                  scrollArea.addChild(user_sprite);
+              });
+
+
     // Update world on state event
     socket.on('pstate', function (data) {
                   
@@ -180,7 +205,7 @@ function run_game() {
                       user_sprite.width = blocksize / 2;
                       user_sprite.height = blocksize / 2;
                       user_sprite.pivot.x = user_sprite.width;
-                      user_sprite.pivot.y = player_sprite.height;
+                      user_sprite.pivot.y = user_sprite.height;
                       user_sprite.position.x = data.data.x;
                       user_sprite.position.y = data.data.y;
                       user_sprite.rotation = data.data.rot;
@@ -193,10 +218,8 @@ function run_game() {
 
                       console.log("Adding new sprite for user " + data.data.id);
                       user_sprites[data.data.id] = user_sprite;
-                      // scrollArea.removeChild(vignette_sprite);
                       scrollArea.addChild(user_sprite);
-                      // scrollArea.addChildAt(vignette_sprite,
-                      //                       scrollArea.children.length - 1);
+                      
                   }
               });
 
