@@ -1,10 +1,10 @@
 package hubcave;
 
 message Player {
-    optional float x = 0;
-    optional float y = 1;
-    optional float rotation = 2;
-    optional int32 id = 3;
+    optional float x = 1;
+    optional float y = 2;
+    optional float rotation = 3;
+    optional int32 id = 4;
 }
 
 message Map {

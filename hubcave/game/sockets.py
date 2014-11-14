@@ -7,15 +7,18 @@ import time
 import fcntl
 import os
 
+from django.contrib.auth.models import User
+
 from socketio.namespace import BaseNamespace
-from socketio.mixins import RoomsMixin, BroadcastMixin
+from socketio.mixins import BroadcastMixin
 from socketio.sdjango import namespace
 
+from hubcave.game.mixins import GameMixin
 from hubcave.game.models import Game
-import hubcave.game.protobuf.hubcave_pb2 as hubcave_proto
+from hubcave.game.protobuf import hubcave_pb2
 
 @namespace('/game')
-class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
+class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
 
     def initialize(self):
         # self.logger = logging.getLogger("socketio.game")
@@ -25,18 +28,26 @@ class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
     def log(self, message):
         print("[{0}] {1}".format(self.socket.sessid, message))
 
-    def on_join(self, game_id):
+    def on_join(self, (game_id, user_id)):
+        self.game_id = game_id
         self.game = Game.objects.get(pk=game_id)
+        self.user = User.objects.get(pk=user_id)
+        self.join(str(self.game_id))
         self.emit('loading', self.game.map_dict())
         return True
 
+    def on_projectile(self, data):
+        print data
+        self.emit_to_room(str(self.game_id), 'projectile', data)
+        return True
+
     def on_player(self, data):
-        p_info = hubcave_proto.Player().ParseFromString(b64decode(data))
-        print("Player data: {}".format(p_info))
+        # Here, need to get changes
+        self.emit_to_room(str(self.game_id), 'pstate', data)
         return True
 
     def recv_disconnect(self):
-        # Remove nickname from the list.
         print('Disconnected')
+        self.leave(str(self.game_id))
         self.disconnect(silent=True)
         return True

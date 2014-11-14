@@ -1,15 +1,7 @@
 // HUBCAVE
-
 // window.onbeforeunload = function (e) {
 //   return "Quit game?";
 // };
-
-var ProtoBuf = dcodeIO.ProtoBuf;
-
-// PROTOBUFS for socket comm
-var game_pbuf = ProtoBuf.loadProtoFile("/static/pbuf/hubcave.proto"),
-    hubcave_proto = game_pbuf.build("hubcave");
-console.log(hubcave_proto);
 
 socket = io.connect("/game", {
                         transports: ['websocket',
@@ -17,12 +9,12 @@ socket = io.connect("/game", {
                                      'polling']
                     });
 socket.on('connect', function () {
-              socket.emit('join', game_id);
+              socket.emit('join', [game_id, user_id]);
           });
 
 socket.on('loading', function (data) {
-              console.log("Loading");
               hubcave_data = data;
+              // show_loading_screen
               run_game();
           });
 
@@ -59,18 +51,18 @@ function run_game() {
     // Build out the map sprites according to blockdata
     //
 
-    var scrollArea = new PIXI.DisplayObjectContainer();
+    scrollArea = new PIXI.DisplayObjectContainer();
     scrollArea.interactive = true;
 
     var max_width = 0,
     max_height = 0;
-    var maze = {};
-    var projectiles = [];
+    var terrain = {};
+    projectiles = {};
 
     for (i=0; i < hubcave_data.blockdata.length; ++i) {
         var block = hubcave_data.blockdata[i];
-        maze[block.x] = maze[block.x] ? maze[block.x] : {};
-        maze[block.x][block.y] = block.blktype;
+        terrain[block.x] = terrain[block.x] ? terrain[block.x] : {};
+        terrain[block.x][block.y] = block.blktype;
         if (!block.blktype) {
             wall_sprite = new PIXI.Sprite(wallTexture);
             wall_sprite.width = blocksize;
@@ -93,6 +85,8 @@ function run_game() {
     scrollArea.scale.x = render_size / blocksize / 5;
     scrollArea.scale.y = scrollArea.scale.x;
 
+    user_sprites = {};
+
     player_sprite = new PIXI.Sprite(charTexture);
     player_sprite.width = blocksize / 2;
     player_sprite.height = blocksize / 2;
@@ -110,19 +104,21 @@ function run_game() {
     player_sprite.pivot.x = player_sprite.width;
     player_sprite.pivot.y = player_sprite.height;
 
+    enemies = [];
+
     scrollArea.addChild(player_sprite);
 
-    vignette_sprite = new PIXI.Sprite(vignetteTexture);
-    vignette_position = function(){
-        vignette_sprite.position.x = player_sprite.position.x -
-            vignette_sprite.width / 2 +
-            player_sprite.width / 2;
-        vignette_sprite.position.y = player_sprite.position.y -
-            vignette_sprite.height / 2 +
-            player_sprite.height / 2;
-    };
-    vignette_position();
-    scrollArea.addChild(vignette_sprite);
+    // vignette_sprite = new PIXI.Sprite(vignetteTexture);
+    // vignette_position = function(){
+    //     vignette_sprite.position.x = player_sprite.position.x -
+    //         vignette_sprite.width / 2 +
+    //         player_sprite.width / 2;
+    //     vignette_sprite.position.y = player_sprite.position.y -
+    //         vignette_sprite.height / 2 +
+    //         player_sprite.height / 2;
+    // };
+    // vignette_position();
+    // scrollArea.addChild(vignette_sprite);
 
     stage.addChild(scrollArea);
 
@@ -134,6 +130,33 @@ function run_game() {
     scrollArea.position.x = -(player_sprite.position.x * scrollArea.scale.x);
     scrollArea.position.y = -(player_sprite.position.y * scrollArea.scale.y);
 
+    // Update world on state event
+    socket.on('pstate', function (data) {
+                  
+                  var user_sprite = null;
+                  if (user_sprites[data.data.id]) {
+                      user_sprite = user_sprites[data.data.id];
+                      user_sprite.position.x = data.data.x;
+                      user_sprite.position.y = data.data.y;
+                      user_sprite.rotation = data.data.rot;
+                  } else {
+                      user_sprite = new PIXI.Sprite(charTexture);
+                      user_sprite.width = blocksize / 2;
+                      user_sprite.height = blocksize / 2;
+                      user_sprite.pivot.x = user_sprite.width;
+                      user_sprite.pivot.y = player_sprite.height;
+                      user_sprite.position.x = data.data.x;
+                      user_sprite.position.y = data.data.y;
+                      user_sprite.rotation = data.data.rot;
+                      console.log("Adding new sprite for user " + data.data.id);
+                      user_sprites[data.data.id] = user_sprite;
+                      // scrollArea.removeChild(vignette_sprite);
+                      scrollArea.addChild(user_sprite);
+                      // scrollArea.addChildAt(vignette_sprite,
+                      //                       scrollArea.children.length - 1);
+                  }
+              });
+
     function update_scroll() {
         // Adjust the viewport if character is past buffer minimum
         if (player_sprite.x * scrollArea.scale.x + edge_buffer >
@@ -144,13 +167,13 @@ function run_game() {
                 (player_sprite.x * scrollArea.scale.x + edge_buffer);
         } else if (player_sprite.x * scrollArea.scale.x - edge_buffer <
                    -scrollArea.x){
-            // Move it to the left
+            // Move it left
             scrollArea.position.x += (-scrollArea.x) -
                 (player_sprite.x * scrollArea.scale.x - edge_buffer);
         }
         if (player_sprite.y * scrollArea.scale.y + edge_buffer >
             -scrollArea.y + render_size) {
-            // Move the viewport to the down
+            // Move it down
             scrollArea.position.y += (-scrollArea.y + render_size) -
                 (player_sprite.y * scrollArea.scale.y + edge_buffer);
         } else if (player_sprite.y * scrollArea.scale.y - edge_buffer <
@@ -161,39 +184,48 @@ function run_game() {
         }
     }
 
-    // console.log(player_sprite.getBounds().x * scrollArea.scale.x +
-    //             player_sprite.getBounds().width + edge_buffer,
-    //             render_size - scrollArea.position.x);
-    // console.log(player_sprite.getBounds().x * scrollArea.scale.x - edge_buffer,
-    //             (-scrollArea.position.x));
-
     scrollArea.mousemove = function(idata) {
         var dist_x = idata.originalEvent.layerX -
             (player_sprite.getBounds().x + player_sprite.getBounds().width / 2);
         var dist_y = idata.originalEvent.layerY -
             (player_sprite.getBounds().y + player_sprite.getBounds().height / 2);
         player_sprite.rotation = Math.atan2(-dist_x, dist_y);
-        // player_sprite.getBounds().y + player_sprite.getBounds().height / 2,
-        // idata.originalEvent.layerX,
-        // idata.originalEvent.layerY;
+        // emit_player_data();
     };
-    scrollArea.mousedown = function(idata) {
+
+    function shootProjectile(user, position, rotation) {
         var p = new PIXI.Sprite(projectileTexture);
-        p.position.x = player_sprite.position.x;
-        p.position.y = player_sprite.position.y;
-        p.rotation = player_sprite.rotation;
+        p.position.x = position.x;
+        p.position.y = position.y;
+        p.rotation = rotation;
         p.scale.x = 12 / blocksize;
         p.scale.y = 12 / blocksize;
         p.lifedist = blocksize * 5;
         p.distanceTraveled = 0;
-        projectiles.push(p);
+        if (!projectiles[user]) { projectiles[user] = []; }; 
+        projectiles[user].push(p);
+        console.log("Adding projectile @ ", p.position, p.rotation);
         scrollArea.addChild(p);
+    };    
+    
+    socket.on('projectile', function (data) {
+                  // A projectile has been fired, keep track of its location locally
+                  shootProjectile(data.data.user, 
+                                  new PIXI.Point(data.data.start_x,
+                                                 data.data.start_y),
+                                  data.data.start_rot);
+              });
+
+    scrollArea.mousedown = function(idata) {
+        var p = new PIXI.Sprite(projectileTexture);
+        shootProjectile(user_id, player_sprite.position, player_sprite.rotation);
+        emit_projectile_data();
     };
 
 
     requestAnimFrame( animate );
 
-    function colliding_with_maze(sprite){
+    function colliding_with_map(sprite){
         var right_block = Math.floor((sprite.x + sprite.pivot.x / 2) / blocksize);
         var left_block = Math.max(Math.floor((sprite.x - sprite.pivot.x / 2) / blocksize), 0);
         var below_block = Math.floor((sprite.y + sprite.pivot.x / 2) / blocksize);
@@ -202,10 +234,40 @@ function run_game() {
         return (above_block < 0 | left_block < 0 |
                 below_block >= max_width |
                 right_block >= max_width) ||
-            !(maze[below_block][right_block] &
-              maze[below_block][left_block] &
-              maze[above_block][right_block] &
-              maze[above_block][left_block]);
+            !(terrain[below_block][right_block] &
+              terrain[below_block][left_block] &
+              terrain[above_block][right_block] &
+              terrain[above_block][left_block]);
+    }
+
+    function is_intersecting(r1, r2) {
+        return !(r2.x > (r1.x + r1.width)  || 
+                 (r2.x + r2.width ) < r1.x || 
+                 r2.y > (r1.y + r1.height) ||
+                 (r2.y + r2.height) < r1.y);
+
+    }
+
+    function emit_player_data() {
+        socket.emit('player', {
+                        data : {
+                            id: user_id,
+                            x : player_sprite.position.x,
+                            y : player_sprite.position.y,
+                            rot : player_sprite.rotation
+                        }
+                    });
+    }
+
+    function emit_projectile_data() {
+        socket.emit('projectile', {
+                        data : {
+                            user: user_id,
+                            start_x : player_sprite.position.x,
+                            start_y : player_sprite.position.y,
+                            start_rot : player_sprite.rotation
+                        }
+                    });
     }
 
     function handle_input() {
@@ -215,48 +277,70 @@ function run_game() {
         };
         var do_emit = true;
         if (kd.A.isDown()) {
-            player_sprite.position.x -= movespeed;
+            player_sprite.position.x -= movespeed * Math.cos(player_sprite.rotation);
+            player_sprite.position.y -= movespeed * Math.sin(player_sprite.rotation);
         }
         else if (kd.D.isDown()) {
-            player_sprite.position.x += movespeed;
+            player_sprite.position.x += movespeed * Math.cos(player_sprite.rotation);
+            player_sprite.position.y += movespeed * Math.sin(player_sprite.rotation);
         }
         else if (kd.W.isDown()) {
-            player_sprite.position.y -= movespeed;
+            player_sprite.position.x -= movespeed * Math.sin(player_sprite.rotation);
+            player_sprite.position.y += movespeed * Math.cos(player_sprite.rotation);
         }
         else if (kd.S.isDown()) {
-            player_sprite.position.y += movespeed;
+            player_sprite.position.x += movespeed * Math.sin(player_sprite.rotation);
+            player_sprite.position.y -= movespeed * Math.cos(player_sprite.rotation);
         }
         else {
             do_emit = false;
         }
 
-        if (colliding_with_maze(player_sprite)) {
+        if (colliding_with_map(player_sprite)) {
             player_sprite.position.x = original_position.x;
             player_sprite.position.y = original_position.y;
         }
-        vignette_position();
+        // vignette_position();
         update_scroll();
         if (do_emit) {
-            var player_data = new hubcave_proto.Player();
-            player_data.x = player_sprite.position.x;
-            player_data.y = player_sprite.position.y;
-            player_data.rotation = player_sprite.rotation;
-
-            // console.log(player_data.x, player_data.y, player_data.rotation);
-            socket.emit('player', player_data.toBase64());
+            emit_player_data();
         }
     }
 
+    
+
     function update_projectiles() {
-        for (i=0; i < projectiles.length; ++i) {
-            var p = projectiles[i];
-            p.position.x -= shootspeed * Math.sin(p.rotation);
-            p.position.y += shootspeed * Math.cos(p.rotation);
-            // console.log(p.position.x, p.position.y);
-            p.distanceTraveled += shootspeed;
-            if (p.distanceTraveled > p.lifedist || colliding_with_maze(p)){
-                projectiles.splice(i, 1);
-                scrollArea.removeChild(p);
+        // See if you can refactor, this might get really slow
+        for (var user in projectiles) {
+            for (var i = 0; i < projectiles[user].length; ++i){
+                projectiles[user][i].position.x -= shootspeed * Math.sin(projectiles[user][i].rotation);
+                projectiles[user][i].position.y += shootspeed * Math.cos(projectiles[user][i].rotation);
+                projectiles[user][i].distanceTraveled += shootspeed;
+                var hit_user = false;
+                for (var user_sprite in user_sprites){
+                    var s = user_sprites[user_sprite];
+                    if (user != user_sprite && 
+                        is_intersecting(s, projectiles[user][i])){
+                        hit_user = true;
+                        console.log(user, " hit ", user_sprite);
+                        // TODO Update hp here
+                    }
+                }
+                if (user != user_id && 
+                    is_intersecting(projectiles[user][i], player_sprite)){
+                    hit_user = true;
+                    console.log("You got hit");
+                    // TODO Update hp here
+                }
+                if (projectiles[user][i].distanceTraveled > projectiles[user][i].lifedist
+                    || colliding_with_map(projectiles[user][i])
+                    || hit_user){
+                    scrollArea.removeChild(projectiles[user][i]);
+                    console.log("Removing projectile @ ", 
+                                projectiles[user][i].position, 
+                                projectiles[user][i].rotation);
+                    projectiles[user].splice(i, 1);
+                }
             }
         }
     }

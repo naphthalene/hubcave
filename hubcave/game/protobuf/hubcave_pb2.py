@@ -18,7 +18,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='hubcave.proto',
   package='hubcave',
-  serialized_pb=_b('\n\rhubcave.proto\x12\x07hubcave\"\xd5\x01\n\x03Map\x12%\n\tblockdata\x18\x03 \x03(\x0b\x32\x12.hubcave.Map.Block\x12\x12\n\nstarting_x\x18\x05 \x01(\x05\x12\x12\n\nstarting_y\x18\x06 \x01(\x05\x1a\x7f\n\x05\x42lock\x12\x33\n\x07\x62lktype\x18\x01 \x02(\x0e\x32\x1c.hubcave.Map.Block.BlockType:\x04WALL\x12\t\n\x01x\x18\x02 \x02(\x05\x12\t\n\x01y\x18\x03 \x02(\x05\"+\n\tBlockType\x12\x08\n\x04WALL\x10\x00\x12\n\n\x06GROUND\x10\x01\x12\x08\n\x04\x44OOR\x10\x02')
+  serialized_pb=_b('\n\rhubcave.proto\x12\x07hubcave\"<\n\x06Player\x12\t\n\x01x\x18\x01 \x01(\x02\x12\t\n\x01y\x18\x02 \x01(\x02\x12\x10\n\x08rotation\x18\x03 \x01(\x02\x12\n\n\x02id\x18\x04 \x01(\x05\"\xd5\x01\n\x03Map\x12%\n\tblockdata\x18\x03 \x03(\x0b\x32\x12.hubcave.Map.Block\x12\x12\n\nstarting_x\x18\x05 \x01(\x05\x12\x12\n\nstarting_y\x18\x06 \x01(\x05\x1a\x7f\n\x05\x42lock\x12\x33\n\x07\x62lktype\x18\x01 \x02(\x0e\x32\x1c.hubcave.Map.Block.BlockType:\x04WALL\x12\t\n\x01x\x18\x02 \x02(\x05\x12\t\n\x01y\x18\x03 \x02(\x05\"+\n\tBlockType\x12\x08\n\x04WALL\x10\x00\x12\n\n\x06GROUND\x10\x01\x12\x08\n\x04\x44OOR\x10\x02')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -45,10 +45,61 @@ _MAP_BLOCK_BLOCKTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=197,
-  serialized_end=240,
+  serialized_start=259,
+  serialized_end=302,
 )
 _sym_db.RegisterEnumDescriptor(_MAP_BLOCK_BLOCKTYPE)
+
+
+_PLAYER = _descriptor.Descriptor(
+  name='Player',
+  full_name='hubcave.Player',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='x', full_name='hubcave.Player.x', index=0,
+      number=1, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='y', full_name='hubcave.Player.y', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='rotation', full_name='hubcave.Player.rotation', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='id', full_name='hubcave.Player.id', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=26,
+  serialized_end=86,
+)
 
 
 _MAP_BLOCK = _descriptor.Descriptor(
@@ -91,8 +142,8 @@ _MAP_BLOCK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=113,
-  serialized_end=240,
+  serialized_start=175,
+  serialized_end=302,
 )
 
 _MAP = _descriptor.Descriptor(
@@ -134,15 +185,23 @@ _MAP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=27,
-  serialized_end=240,
+  serialized_start=89,
+  serialized_end=302,
 )
 
 _MAP_BLOCK.fields_by_name['blktype'].enum_type = _MAP_BLOCK_BLOCKTYPE
 _MAP_BLOCK.containing_type = _MAP
 _MAP_BLOCK_BLOCKTYPE.containing_type = _MAP_BLOCK
 _MAP.fields_by_name['blockdata'].message_type = _MAP_BLOCK
+DESCRIPTOR.message_types_by_name['Player'] = _PLAYER
 DESCRIPTOR.message_types_by_name['Map'] = _MAP
+
+Player = _reflection.GeneratedProtocolMessageType('Player', (_message.Message,), dict(
+  DESCRIPTOR = _PLAYER,
+  __module__ = 'hubcave_pb2'
+  # @@protoc_insertion_point(class_scope:hubcave.Player)
+  ))
+_sym_db.RegisterMessage(Player)
 
 Map = _reflection.GeneratedProtocolMessageType('Map', (_message.Message,), dict(
 
