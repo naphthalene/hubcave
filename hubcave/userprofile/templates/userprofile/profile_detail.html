@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load sekizai_tags %}
+{% load staticfiles %}
+
+{% block sidebar %}
+<div class="col-md-3 col-sm-6">
+  <div class="panel panel-default col-lg-push-9">
+    <div class="panel-heading">User's Games</div>
+    <div class="panel-body">
+      {% for game in users_games %}
+      <a href="{% url 'game_game' game.id %}">{{ game }}</a><br/>
+      {% empty %}
+      No Games<br/>
+      {% endfor %}
+    </div>
+  </div>
+  <!-- <div class="panel panel-default"> -->
+  <!--   <div class="panel-heading">Other Players</div> -->
+  <!--   <div class="panel-body"> -->
+  <!--     {% for user in sidebar_users %} -->
+  <!--     <a href="#">{{ user.username }}</a></br> -->
+  <!--     {% endfor %} -->
+  <!--   </div> -->
+  <!-- </div> -->
+</div>
+<div class="col-md-9 col-sm-6">
+  <div class="panel panel-default">
+    <div class="panel-heading">User Profile</div>
+    <div class="panel-body">
+      <h4>Edit profile here</h4>
+      <blockquote>
+        <p>
+          Dolor sit amet....
+        </p>
+      </blockquote>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% endblock %}

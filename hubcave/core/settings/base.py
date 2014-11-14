@@ -35,6 +35,7 @@ INSTALLED_APPS = (
     'gunicorn',
 
     # Project
+    'hubcave.userprofile',
     'hubcave.dashboard',
     'hubcave.game',
     'hubcave.core',

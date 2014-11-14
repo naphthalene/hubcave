@@ -8,6 +8,10 @@ recursive-include hubcave/dashboard/fixtures *
 recursive-include hubcave/dashboard/static *
 recursive-include hubcave/dashboard/templates *
 
+recursive-include hubcave/userprofile/fixtures *
+recursive-include hubcave/userprofile/static *
+recursive-include hubcave/userprofile/templates *
+
 recursive-include hubcave/game/fixtures *
 recursive-include hubcave/game/static *
 recursive-include hubcave/game/templates *

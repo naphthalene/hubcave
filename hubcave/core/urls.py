@@ -19,6 +19,7 @@ urlpatterns = patterns(
                                                content_type='text/plain')),
     url('', include('hubcave.dashboard.urls')),
     url('', include('hubcave.game.urls')),
+    url('', include('hubcave.userprofile.urls')),
     url('', include('social.apps.django_app.urls', namespace='social')),
     url('', include('django.contrib.auth.urls', namespace='auth')),
     url("^socket\.io", include(socketio.sdjango.urls)),
