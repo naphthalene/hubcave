@@ -1,6 +1,7 @@
 import logging
 import sys
 import subprocess
+from base64 import b64decode, b64encode
 from threading import Thread
 import time
 import fcntl
@@ -11,6 +12,7 @@ from socketio.mixins import RoomsMixin, BroadcastMixin
 from socketio.sdjango import namespace
 
 from hubcave.game.models import Game
+import hubcave.game.protobuf.hubcave_pb2 as hubcave_proto
 
 @namespace('/game')
 class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
@@ -29,7 +31,8 @@ class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         return True
 
     def on_player(self, data):
-        print("Player data: {}".format(data))
+        p_info = hubcave_proto.Player().ParseFromString(b64decode(data))
+        print("Player data: {}".format(p_info))
         return True
 
     def recv_disconnect(self):

@@ -241,9 +241,9 @@ function run_game() {
             player_data.x = player_sprite.position.x;
             player_data.y = player_sprite.position.y;
             player_data.rotation = player_sprite.rotation;
-            
-            buffer = player_data.encode();
-            socket.emit('player', buffer.toArrayBuffer());
+
+            // console.log(player_data.x, player_data.y, player_data.rotation);
+            socket.emit('player', player_data.toBase64());
         }
     }
 
