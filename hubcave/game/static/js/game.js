@@ -104,6 +104,12 @@ function run_game() {
     player_sprite.pivot.x = player_sprite.width;
     player_sprite.pivot.y = player_sprite.height;
 
+    var nick = new PIXI.Text(user_name,
+                             {
+                                 font: 'bold 12px Arial'
+                             });
+    player_sprite.addChild(nick);
+
     enemies = [];
 
     scrollArea.addChild(player_sprite);
@@ -148,6 +154,13 @@ function run_game() {
                       user_sprite.position.x = data.data.x;
                       user_sprite.position.y = data.data.y;
                       user_sprite.rotation = data.data.rot;
+                      
+                      var nick = new PIXI.Text(data.data.user_name,
+                                               {
+                                                   font: 'bold 12px Arial'
+                                               });
+                      user_sprite.addChild(nick);
+
                       console.log("Adding new sprite for user " + data.data.id);
                       user_sprites[data.data.id] = user_sprite;
                       // scrollArea.removeChild(vignette_sprite);
@@ -204,7 +217,6 @@ function run_game() {
         p.distanceTraveled = 0;
         if (!projectiles[user]) { projectiles[user] = []; }; 
         projectiles[user].push(p);
-        console.log("Adding projectile @ ", p.position, p.rotation);
         scrollArea.addChild(p);
     };    
     
@@ -252,6 +264,7 @@ function run_game() {
         socket.emit('player', {
                         data : {
                             id: user_id,
+                            user_name: user_name,
                             x : player_sprite.position.x,
                             y : player_sprite.position.y,
                             rot : player_sprite.rotation
@@ -318,7 +331,6 @@ function run_game() {
                     if (user != user_sprite && 
                         is_intersecting(s, projectiles[user][i])){
                         hit_user = true;
-                        console.log(user, " hit ", user_sprite);
                         // TODO Update hp here
                     }
                 }
@@ -332,9 +344,6 @@ function run_game() {
                     || colliding_with_map(projectiles[user][i])
                     || hit_user){
                     scrollArea.removeChild(projectiles[user][i]);
-                    console.log("Removing projectile @ ", 
-                                projectiles[user][i].position, 
-                                projectiles[user][i].rotation);
                     projectiles[user].splice(i, 1);
                 }
             }

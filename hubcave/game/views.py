@@ -38,6 +38,7 @@ class GameDetail(DetailView):
         # Call the base implementation first to get a context
         context = super(GameDetail, self).get_context_data(**kwargs)
         context['user_id'] = self.request.user.id;
+        context['user_name'] = self.request.user.username;
         self.object.generate_or_update_map()
         return context
 
