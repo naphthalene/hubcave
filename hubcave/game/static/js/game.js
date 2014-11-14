@@ -277,20 +277,16 @@ function run_game() {
         };
         var do_emit = true;
         if (kd.A.isDown()) {
-            player_sprite.position.x -= movespeed * Math.cos(player_sprite.rotation);
-            player_sprite.position.y -= movespeed * Math.sin(player_sprite.rotation);
+            player_sprite.position.x -= movespeed;
         }
         else if (kd.D.isDown()) {
-            player_sprite.position.x += movespeed * Math.cos(player_sprite.rotation);
-            player_sprite.position.y += movespeed * Math.sin(player_sprite.rotation);
+            player_sprite.position.x += movespeed;
         }
         else if (kd.W.isDown()) {
-            player_sprite.position.x -= movespeed * Math.sin(player_sprite.rotation);
-            player_sprite.position.y += movespeed * Math.cos(player_sprite.rotation);
+            player_sprite.position.y -= movespeed;
         }
         else if (kd.S.isDown()) {
-            player_sprite.position.x += movespeed * Math.sin(player_sprite.rotation);
-            player_sprite.position.y -= movespeed * Math.cos(player_sprite.rotation);
+            player_sprite.position.y += movespeed;
         }
         else {
             do_emit = false;
