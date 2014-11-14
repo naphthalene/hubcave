@@ -1,7 +1,11 @@
 // HUBCAVE
+
 // window.onbeforeunload = function (e) {
 //   return "Quit game?";
 // };
+
+// PROTOBUFS for socket comm
+var game = ProtoBuf.loadProtoFile("/static/pbuf/hubcave.proto");
 
 socket = io.connect("/game", {
                         transports: ['websocket',
@@ -205,6 +209,7 @@ function run_game() {
             x: player_sprite.x,
             y: player_sprite.y
         };
+        var do_emit = true;
         if (kd.A.isDown()) {
             player_sprite.position.x -= movespeed;
         }
@@ -217,6 +222,9 @@ function run_game() {
         else if (kd.S.isDown()) {
             player_sprite.position.y += movespeed;
         }
+        else {
+            do_emit = false;
+        }
 
         if (colliding_with_maze(player_sprite)) {
             player_sprite.position.x = original_position.x;
@@ -224,6 +232,10 @@ function run_game() {
         }
         vignette_position();
         update_scroll();
+        if (do_emit) {
+            socket.emit('player', {kind: 'position',
+                                   data:  player_sprite.position});
+        }
     }
 
     function update_projectiles() {

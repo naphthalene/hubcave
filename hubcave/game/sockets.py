@@ -28,6 +28,10 @@ class ChatNamespace(BaseNamespace, RoomsMixin, BroadcastMixin):
         self.emit('loading', self.game.map_dict())
         return True
 
+    def on_player(self, data):
+        print("Player data: {}".format(data))
+        return True
+
     def recv_disconnect(self):
         # Remove nickname from the list.
         print('Disconnected')
