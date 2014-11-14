@@ -7,7 +7,7 @@ from hubcave.game.models import Game
 
 # Create your views here.
 class ProfileDetail(DetailView):
-    model = UserProfile
+    model = User
 
     def dispatch(self, request, *args, **kwargs):
         return super(ProfileDetail, self).dispatch(request, *args, **kwargs)
@@ -18,5 +18,6 @@ class ProfileDetail(DetailView):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(ProfileDetail, self).get_context_data(**kwargs)
-        context['users_games'] = Game.objects.filter(user=self.object.user)
+        context['users_games'] = Game.objects.filter(user=self.object)
+        profile = UserProfile.objects.get(user=self.object)
         return context
