@@ -8,7 +8,7 @@
 <!-- </div> -->
 <div class="col-md-3 col-sm-6">
   <div class="panel panel-default col-lg-push-9">
-    <div class="panel-heading">Games</div>
+    <div class="panel-heading">My Games</div>
     <div class="panel-body">
       {% for game in sidebar_games %}
       <a href="{% url 'game_game' game.id %}">{{ game }}</a><br/>
