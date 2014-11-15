@@ -246,6 +246,7 @@ function run_game() {
                       '<li>' +
                           '<a href=/profile/' + data.data.user_id + '>' +
                           data.data.user_name + ' </a>Joined!</li>');
+                  emit_player_data();
               });
 
     socket.on('leaving', function (data) {
@@ -290,6 +291,8 @@ function run_game() {
         player_sprite.rotation = Math.atan2(-dist_x, dist_y);
         // emit_player_data();
     };
+
+    emit_player_data();
 
     function shootProjectile(user, position, rotation) {
         var p = new PIXI.Sprite(projectileTexture);
