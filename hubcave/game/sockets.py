@@ -25,18 +25,19 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         print("Socketio session started")
         # self.log("Socketio session started")
 
-    def log(self, message):
-        print("[{0}] {1}".format(self.socket.sessid, message))
-
     def on_join(self, (game_id, user_id)):
         self.game_id = game_id
         self.game = Game.objects.get(pk=game_id)
         self.user = User.objects.get(pk=user_id)
         self.join(str(self.game_id))
+        print("{} joined {}/{}".format(self.user.username,
+                                       self.game.user.username,
+                                       self.game.repository))
+
         self.emit('loading', self.game.map_dict())
-        self.emit_to_room(str(self.game_id), 'joined', {
+        self.emit_to_room(str(self.game_id), 'joining', {
             'data' : {
-                'id': user_id,
+                'user_id': user_id,
                 'user_name' : self.user.username,
                 'x' : self.game.starting_x,
                 'y' : self.game.starting_y
@@ -60,7 +61,10 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         return True
 
     def recv_disconnect(self):
-        print('Disconnected')
         self.leave(str(self.game_id))
+        self.emit_to_room(str(self.game_id), 'leaving', {
+            'user' : self.user.id,
+            'username' : self.user.username
+        })
         self.disconnect(silent=True)
         return True

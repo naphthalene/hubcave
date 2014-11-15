@@ -44,6 +44,8 @@ def run_socket_server(addr, port, *args, **options):
     print
     handler = get_handler(*args, **options)
     server = SocketIOServer(bind, handler,
+                            heartbeat_interval=5,
+                            heartbeat_timeout=30,
                             resource="socket.io",
                             policy_server=True)
     server.serve_forever()

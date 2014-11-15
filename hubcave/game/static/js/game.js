@@ -18,7 +18,10 @@ socket.on('connect', function () {
 
 socket.on('loading', function (data) {
               hubcave_data = data;
-              // show_loading_screen
+              // $("#room_chat ul").append(
+              //     '<li>' +
+              //         '<a href=/profile/' + data.data.user_id + '>' +
+              //         data.data.user_name + ' </a>Quit</li>');
               run_game();
           });
 
@@ -238,6 +241,20 @@ function run_game() {
                   }
               });
 
+    socket.on('joining', function (data) {
+                  $("#room_chat ul").append(
+                      '<li>' +
+                          '<a href=/profile/' + data.data.user_id + '>' +
+                          data.data.user_name + ' </a>Joined!</li>');
+              });
+
+    socket.on('leaving', function (data) {
+                  $("#room_chat ul").append(
+                      '<li>' +
+                          '<a href=/profile/' + data.data.user_id + '>' +
+                          data.data.user_name + ' </a>Quit</li>');
+              });
+
     function update_scroll() {
         // Adjust the viewport if character is past buffer minimum
         if (player_sprite.x * scrollArea.scale.x + edge_buffer >
@@ -293,10 +310,10 @@ function run_game() {
                   $("#room_chat ul").append(
                       '<li>' +
                           '<a href=/profile/' + data.user_id + '>' +
-                          data.user_name + ' </a><plaintext> ' +
-                          data.text +
-                          '</plaintext>' +
+                          data.user_name + ' </a><span> ' +
+                          data.text + ' </span>' +
                           '</li>');
+                  console.log(data.text);
               });
 
     socket.on('projectile', function (data) {
