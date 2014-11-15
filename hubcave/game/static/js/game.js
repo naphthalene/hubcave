@@ -116,6 +116,7 @@ function run_game() {
         player_hp = 100;
         player_ammo = 500;
         player_items = {};
+        
     }; reset_player();
 
     player_sprite.pivot.x = player_sprite.width;
@@ -283,6 +284,8 @@ function run_game() {
         }
     }
 
+    emit_player_data();
+
     scrollArea.mousemove = function(idata) {
         var dist_x = idata.originalEvent.layerX -
             (player_sprite.getBounds().x + player_sprite.getBounds().width / 2);
@@ -291,8 +294,6 @@ function run_game() {
         player_sprite.rotation = Math.atan2(-dist_x, dist_y);
         // emit_player_data();
     };
-
-    emit_player_data();
 
     function shootProjectile(user, position, rotation) {
         var p = new PIXI.Sprite(projectileTexture);
@@ -335,7 +336,6 @@ function run_game() {
             player_ammo -= 1;
         }
     };
-
 
     requestAnimFrame( animate );
 
@@ -508,6 +508,7 @@ function run_game() {
                     player_hp -= 1;
                     if (player_hp <= 0) {
                         reset_player();
+                        emit_player_data();
                     }
                 }
                 if (projectiles[user][i].distanceTraveled > projectiles[user][i].lifedist
