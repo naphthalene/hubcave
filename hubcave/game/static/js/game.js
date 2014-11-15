@@ -293,9 +293,9 @@ function run_game() {
                   $("#room_chat ul").append(
                       '<li>' +
                           '<a href=/profile/' + data.user_id + '>' +
-                          data.user_name + ' </a><span> ' +
+                          data.user_name + ' </a><plaintext> ' +
                           data.text +
-                          '</li>');
+                          '</plaintext></li>');
               });
 
     socket.on('projectile', function (data) {
