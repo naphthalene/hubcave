@@ -295,7 +295,8 @@ function run_game() {
                           '<a href=/profile/' + data.user_id + '>' +
                           data.user_name + ' </a><plaintext> ' +
                           data.text +
-                          '</plaintext></li>');
+                          '</plaintext>' +
+                          '</li>');
               });
 
     socket.on('projectile', function (data) {
@@ -398,6 +399,9 @@ function run_game() {
     kd.ENTER.up(function() {
                     var chat_input = $('#chat_input'),
                         chat_msg = chat_input.val();
+                    // Escape any html inside the message
+                    chat_msg = chat_msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
                     if (typing && chat_msg != "") {
                         console.log(user_name, " is submitting ", chat_msg);
                         socket.emit('msg', {
