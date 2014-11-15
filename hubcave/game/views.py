@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.contrib import messages
 from django_tables2 import SingleTableView
-from django.shortcuts import redirect
-from django.views.generic import UpdateView, DetailView, CreateView
+from django.shortcuts import redirect, get_object_or_404
+from django.views.generic import (UpdateView, DetailView,
+                                  CreateView, RedirectView)
 from django.core.urlresolvers import reverse_lazy, reverse
 from django.contrib.auth.models import User
 
@@ -11,6 +12,18 @@ from hubcave.game.models import Game
 from hubcave.game.tables import GameTable
 
 # Create your views here.
+
+class GameRedirectView(RedirectView):
+    query_string = True
+    permanent = False
+    pattern_name = "game_game"
+
+    def get_redirect_url(self, *args, **kwargs):
+        username = kwargs.get("username");
+        repo = kwargs.get("repository");
+        game = get_object_or_404(Game, user__username=username,
+                                 repository=repo)
+        return reverse('game_game', kwargs={'pk' : game.pk})
 
 class GameList(SingleTableView):
     table_class = GameTable

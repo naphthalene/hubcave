@@ -28,6 +28,7 @@ class Game(models.Model):
     def __unicode__(self):
         return self.repository
 
+    ## TODO move this to user profile?
     @property
     def token(self):
         return self.user.social_auth.get(provider='github').extra_data['access_token']

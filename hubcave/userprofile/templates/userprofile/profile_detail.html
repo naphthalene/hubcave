@@ -17,14 +17,9 @@
 </div>
 <div class="col-md-9 col-sm-6">
   <div class="panel panel-default">
-    <div class="panel-heading">{{ object.user.username }} Profile</div>
+    <div class="panel-heading">{{ object.username }}'s Profile</div>
     <div class="panel-body">
-      <h4>Edit profile here</h4>
-      <blockquote>
-        <p>
-          Dolor sit amet....
-        </p>
-      </blockquote>
+      <h4>{{ object.get_full_name|default:object.username }}</h4>
     </div>
   </div>
 </div>

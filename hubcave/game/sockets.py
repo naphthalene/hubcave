@@ -56,7 +56,6 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         return True
 
     def on_player(self, data):
-        # Here, need to get changes
         self.emit_to_room(str(self.game_id), 'pstate', data)
         return True
 
