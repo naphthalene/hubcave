@@ -103,3 +103,8 @@ class Player(models.Model):
 
     class Meta:
         unique_together = (("user", "game"),)
+
+class Message(models.Model):
+    user = models.ForeignKey(User)
+    game = models.ForeignKey(Game, related_name="messages")
+    text = models.TextField()

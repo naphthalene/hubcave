@@ -17,11 +17,16 @@ socket.on('connect', function () {
           });
 
 socket.on('loading', function (data) {
-              hubcave_data = data;
-              // $("#room_chat ul").append(
-              //     '<li>' +
-              //         '<a href=/profile/' + data.data.user_id + '>' +
-              //         data.data.user_name + ' </a>Quit</li>');
+              hubcave_data = data.map;
+              for (var i = 0; i < data.messages.length; ++i){
+                  var msg = data.messages[i];
+                  $("#room_chat ul").append(
+                      '<li>' +
+                          '<a href=/profile/' + msg.user_id + '>' +
+                          msg.user_name + ' </a><span> ' +
+                          msg.text + ' </span>' +
+                          '</li>');
+              }
               run_game();
           });
 
