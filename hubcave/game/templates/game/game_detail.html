@@ -16,7 +16,7 @@
 {% block wrapper %}
 <div class="col-lg-8">
   <div class="panel panel-default">
-    <div class="panel-heading">{{ object.user.username }}/{{ object.repository }}</div>
+    <div class="panel-heading">{{ object.user.username }}/{{ object.repository }}   <a href="https://github.com/{{ object.user.username }}/{{ object.repository }}">Go to GitHub</a></div>
     <div class="panel-body" id="game_panel">
       <div class="canvas-panel"></div>
     </div>
