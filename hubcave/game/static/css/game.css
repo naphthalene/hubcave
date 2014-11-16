@@ -11,3 +11,5 @@ body {
 .panel-body {
     background:#000000;
 }
+
+#active_users ul li { display: inline; }

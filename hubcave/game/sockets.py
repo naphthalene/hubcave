@@ -62,6 +62,7 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
 
     def recv_disconnect(self):
         self.leave(str(self.game_id))
+        print("{} disconnected".format(self.user.username))
         self.emit_to_room(str(self.game_id), 'leaving', {
             'user' : self.user.id,
             'username' : self.user.username

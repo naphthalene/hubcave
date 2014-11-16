@@ -93,7 +93,7 @@ function run_game() {
     scrollArea.scale.x = render_size / blocksize / 5;
     scrollArea.scale.y = scrollArea.scale.x;
 
-    user_sprites = {};
+    users = {};
 
     // Bow is default item at '1'
     // Items/keys -> map 2-0 keys to select
@@ -116,7 +116,6 @@ function run_game() {
         player_hp = 100;
         player_ammo = 500;
         player_items = {};
-        
     }; reset_player();
 
     player_sprite.pivot.x = player_sprite.width;
@@ -210,16 +209,28 @@ function run_game() {
     scrollArea.position.x = -(player_sprite.position.x * scrollArea.scale.x);
     scrollArea.position.y = -(player_sprite.position.y * scrollArea.scale.y);
 
+    function update_active_users() {
+        var active_users_panel = $("#active_users ul");
+        active_users_panel.empty();
+        for (var user_id in users) {
+            var user_name = users[user_id].username;
+            active_users_panel.append(
+                '<li><a href=/profile/' + user_id + '>' +
+                    user_name + ' </a></li>');
+        }
+
+    }
+
     // Update world on state event
     socket.on('pstate', function (data) {
-
                   var user_sprite = null;
-                  if (user_sprites[data.data.id]) {
-                      user_sprite = user_sprites[data.data.id];
+                  if (users[data.data.id]) {
+                      user_sprite = users[data.data.id].sprite;
                       user_sprite.position.x = data.data.x;
                       user_sprite.position.y = data.data.y;
                       user_sprite.rotation = data.data.rot;
                   } else {
+                      // New sprite must be drawn
                       user_sprite = new PIXI.Sprite(charTexture);
                       user_sprite.width = blocksize / 2;
                       user_sprite.height = blocksize / 2;
@@ -235,10 +246,13 @@ function run_game() {
                                                });
                       user_sprite.addChild(nick);
 
-                      console.log("Adding new sprite for user " + data.data.id);
-                      user_sprites[data.data.id] = user_sprite;
+                      console.log("Adding new sprite for " + data.data.user_name);
+                      users[data.data.id] = {
+                          username: data.data.user_name,
+                          sprite: user_sprite
+                      };
                       scrollArea.addChild(user_sprite);
-
+                      update_active_users();
                   }
               });
 
@@ -253,8 +267,11 @@ function run_game() {
     socket.on('leaving', function (data) {
                   $("#room_chat ul").append(
                       '<li>' +
-                          '<a href=/profile/' + data.data.user_id + '>' +
-                          data.data.user_name + ' </a>Quit</li>');
+                          '<a href=/profile/' + data.user + '>' +
+                          data.username + ' </a>Quit</li>');
+                  scrollArea.removeChild(users[data.user].sprite);
+                  delete users[data.user];
+                  update_active_users();
               });
 
     function update_scroll() {
@@ -487,16 +504,18 @@ function run_game() {
 
     function update_projectiles() {
         // See if you can refactor, this might get really slow
+        // Empirically is okay, but with many users in a map could bring 
+        // down the DO box
         for (var user in projectiles) {
             for (var i = 0; i < projectiles[user].length; ++i){
                 projectiles[user][i].position.x -= shootspeed * Math.sin(projectiles[user][i].rotation);
                 projectiles[user][i].position.y += shootspeed * Math.cos(projectiles[user][i].rotation);
                 projectiles[user][i].distanceTraveled += shootspeed;
                 var hit_user = false;
-                for (var user_sprite in user_sprites){
-                    var s = user_sprites[user_sprite];
-                    if (user != user_sprite &&
-                        is_intersecting(s, projectiles[user][i])){
+                for (var other_user in users){
+                    var u = users[other_user];
+                    if (user != other_user &&
+                        is_intersecting(u.sprite, projectiles[user][i])){
                         hit_user = true;
                         // TODO Update hp here
                     }
@@ -504,8 +523,8 @@ function run_game() {
                 if (user != user_id &&
                     is_intersecting(projectiles[user][i], player_sprite)){
                     hit_user = true;
-                    console.log("You got hit", player_hp);
                     player_hp -= 1;
+                    console.log("You got hit", player_hp);
                     if (player_hp <= 0) {
                         reset_player();
                         emit_player_data();
