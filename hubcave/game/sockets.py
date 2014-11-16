@@ -61,6 +61,7 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         return True
 
     def on_msg(self, data):
+        data['text'] = data['text'].replace('<', '&lt;').replace('>', '&gt;')
         print("[Room {}]({}) {}".format(str(self.game_id),
                                         data['user_name'],
                                         data['text']))

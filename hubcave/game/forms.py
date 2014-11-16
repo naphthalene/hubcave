@@ -10,13 +10,11 @@ from hubcave.game.models import Game
 
 # TODO add point system based on commits and item collection
 
-class GameCreateForm(ModelForm):
-    button_prefix = "Create"
+class GameUpdateForm(ModelForm):
 
     class Meta:
         model = Game
         fields = [
-            'repository',
             'map_type'
         ]
         widgets = {'map_type': forms.Select(choices=(('maze', 'Maze'),
@@ -28,16 +26,10 @@ class GameCreateForm(ModelForm):
         self.helper.label_class = 'col-lg-2'
         self.helper.field_class = 'col-lg-8'
         self.helper.layout = Layout(
-            'repository',
             'map_type',
             ButtonHolder(
-                Submit('submit', "%s Game".format(self.button_prefix,
-                                                  css_class='button'))
+                Submit('submit', "Update Game".format(css_class='button'))
             )
         )
 
-        super(ProjectCreateForm, self).__init__(*args, **kwargs)
-
-
-class GameUpdateForm(GameCreateForm):
-    button_prefix = "Update"
+        super(GameUpdateForm, self).__init__(*args, **kwargs)

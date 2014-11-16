@@ -7,8 +7,5 @@ urlpatterns = patterns(
     '',
     url(r'^dashboard/$',
         login_required(DashboardView.as_view(), login_url='/'),
-        name='dashboard_dashboard_view'),
-    url(r'^dashboard/news/$',
-        login_required(DashboardView.as_view(), login_url='/'),
-        name='dashboard_dashboard_view'),
+        name='dashboard_dashboard_view')
 )

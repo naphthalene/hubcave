@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django_tables2 import SingleTableView
 from django.shortcuts import redirect, get_object_or_404
@@ -7,7 +8,7 @@ from django.views.generic import (UpdateView, DetailView,
 from django.core.urlresolvers import reverse_lazy, reverse
 from django.contrib.auth.models import User
 
-from hubcave.game.forms import GameUpdateForm, GameCreateForm
+from hubcave.game.forms import GameUpdateForm
 from hubcave.game.models import Game
 from hubcave.game.tables import GameTable
 
@@ -25,19 +26,8 @@ class GameRedirectView(RedirectView):
                                  repository=repo)
         return reverse('game_game', kwargs={'pk' : game.pk})
 
-class GameList(SingleTableView):
-    table_class = GameTable
-    model = Game
-
-    def get_context_data(self, **kwargs):
-        self.queryset = Game.objects.filter(user_id=self.request.user.id)
-
-
 class GameDetail(DetailView):
     model = Game
-
-    def dispatch(self, request, *args, **kwargs):
-        return super(GameDetail, self).dispatch(request, *args, **kwargs)
 
     def get_template_names(self):
         if getattr(settings, 'SOCKETIO_ENABLED', False):
@@ -55,19 +45,6 @@ class GameDetail(DetailView):
         self.object.generate_or_update_map()
         return context
 
-class GameCreate(CreateView):
-    model = Game
-    form_class = GameCreateForm
-    template_name_suffix = '_create'
-
-    def form_valid(self, form):
-        """After the form is valid lets let people know"""
-        ret = super(GameCreate, self).form_valid(form)
-        messages.add_message(self.request, messages.SUCCESS,
-                             "Game for %s/%s created".format(self.object.user,
-                                                             self.object.repository))
-        return ret
-
 class GameUpdate(UpdateView):
     """
     Update a game
@@ -75,4 +52,16 @@ class GameUpdate(UpdateView):
     model = Game
     form_class = GameUpdateForm
     template_name_suffix = '_update'
-    success_url = reverse_lazy('game_game_list')
+    success_url = reverse_lazy('dashboard_dashboard_view')
+
+    def dispatch(self, request, *args, **kwargs):
+        g = get_object_or_404(Game, id=kwargs['pk'])
+        if request.user != g.user:
+            # Can't edit someone else's repo maaan
+            return HttpResponseRedirect(reverse('game_game', kwargs={'pk' : g.pk}))
+        else:
+            return super(GameUpdate, self).dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        self.object.generate_map()
+        return super(GameUpdate, self).form_valid(form)
