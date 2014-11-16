@@ -4,7 +4,6 @@
 // };
 
 // Disable the chat window initially
-$('#chat_input').toggle(false);
 $('#chat_input').width($('.chat-panel').width() - 50);
 
 socket = io.connect("/game", {
@@ -74,7 +73,6 @@ function run_game() {
 
     renderer.view.className = "rendererView";
     $('.canvas-panel').append(renderer.view);
-    $('#chat_input').width($('.rendererView').width());
 
     //
     // Build out the map sprites according to blockdata
@@ -430,7 +428,6 @@ function run_game() {
     kd.T.up(function() {
                 var chat_input = $('#chat_input');
                 if (!typing) {
-                    chat_input.toggle(true);
                     $('#chat_input').width($('.chat-panel').width() - 50);
                     typing = true;
                     chat_input.focus();
@@ -449,9 +446,9 @@ function run_game() {
     kd.ESC.up(function() {
                   var chat_input = $('#chat_input');
                   if (typing) {
-                      chat_input.toggle(false);
                       $('#chat_input').width($('.chat-panel').width() - 50);
                       typing = false;
+                      $('#chat_input').blur();
                       $('.rendererView').focus();
                   }
               });
@@ -476,8 +473,8 @@ function run_game() {
                                 chat_msg +
                                 '</li>');
                         chat_input.val("");
-                        $('#chat_input').toggle(false);
                         $('#chat_input').width($('.chat-panel').width() - 50);
+                        $('#chat_input').blur();
                         typing = false;
                         $('.rendererView').focus();
                     }

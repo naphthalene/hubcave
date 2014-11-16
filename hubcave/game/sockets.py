@@ -68,7 +68,7 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
                                      game=self.game,
                                      text=data['text'])
         msg.save()
-        data['when'] = msg.when
+        data['when'] = formats.date_format(msg.when, "TIME_FORMAT")
         self.emit_to_room(str(self.game_id), 'msg', data)
         return True
 
