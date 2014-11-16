@@ -1,3 +1,4 @@
+from django.db.models import Count, Max, Min
 from django.views.generic import TemplateView
 from hubcave.dashboard.models import Dashboard
 from django.contrib.auth.models import User
@@ -33,6 +34,7 @@ class DashboardView(TemplateView):
         except:
             print("Failed to get or update games")
 
+        context['popular_games'] = Game.objects.annotate(Count('players')).order_by('-players__count')[:15]
         context['sidebar_users'] = self.active_users()
         context['sidebar_games'] = Game.objects.filter(user=self.request.user)
         return context

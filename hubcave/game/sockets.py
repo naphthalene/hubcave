@@ -14,7 +14,7 @@ from socketio.mixins import BroadcastMixin
 from socketio.sdjango import namespace
 
 from hubcave.game.mixins import GameMixin
-from hubcave.game.models import Game
+from hubcave.game.models import Game, Player
 from hubcave.game.protobuf import hubcave_pb2
 
 @namespace('/game')
@@ -33,7 +33,8 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         print("{} joined {}/{}".format(self.user.username,
                                        self.game.user.username,
                                        self.game.repository))
-
+        self.player, created = Player.objects.get_or_create(user=self.user,
+                                                            game=self.game)
         self.emit('loading', self.game.map_dict())
         self.emit_to_room(str(self.game_id), 'joining', {
             'data' : {
@@ -67,5 +68,6 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
             'user' : self.user.id,
             'username' : self.user.username
         })
+        self.player.delete()
         self.disconnect(silent=True)
         return True

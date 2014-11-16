@@ -212,14 +212,16 @@ function run_game() {
     function update_active_users() {
         var active_users_panel = $("#active_users ul");
         active_users_panel.empty();
-        for (var user_id in users) {
-            var user_name = users[user_id].username;
+        for (var id in users) {
+            var uname = users[id].username;
             active_users_panel.append(
-                '<li><a href=/profile/' + user_id + '>' +
-                    user_name + ' </a></li>');
+                '<li><a href=/profile/' + id + '>' +
+                    uname + ' </a></li>');
         }
-
-    }
+        active_users_panel.append(
+            '<li><a href=/profile/' + user_id + '>' +
+                user_name + ' </a></li>');
+    } update_active_users();
 
     // Update world on state event
     socket.on('pstate', function (data) {

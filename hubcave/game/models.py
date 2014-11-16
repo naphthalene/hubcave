@@ -26,7 +26,7 @@ class Game(models.Model):
     repository_deleted = models.BooleanField(default=False)
 
     def __unicode__(self):
-        return self.repository
+        return "{}/{}".format(self.user, self.repository)
 
     ## TODO move this to user profile?
     @property
@@ -95,3 +95,11 @@ class Game(models.Model):
         gmap = Map()
         gmap.ParseFromString(self.map_data)
         return protobuf_to_dict(gmap)
+
+
+class Player(models.Model):
+    user = models.ForeignKey(User)
+    game = models.ForeignKey(Game, related_name="players")
+
+    class Meta:
+        unique_together = (("user", "game"),)

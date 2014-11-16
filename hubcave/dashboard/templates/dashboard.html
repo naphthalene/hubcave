@@ -11,7 +11,7 @@
     <div class="panel-heading">My Games</div>
     <div class="panel-body">
       {% for game in sidebar_games %}
-      <a href="{% url 'game_game' game.id %}">{{ game }}</a><br/>
+      <a href="{% url 'game_game' game.id %}">{{ game.repository }}</a><br/>
       {% empty %}
       No Games<br/>
       {% endfor %}
@@ -27,30 +27,42 @@
   </div>
 </div>
 <div class="col-md-9 col-sm-6">
-  <div class="panel panel-default">
-    <div class="panel-heading">News</div>
-    <div class="panel-body">
-      <h4>Chat is now available!</h4>
-      <blockquote>
-        <p>
-          To use, press <i>T</i> while in-game, type your message and hit
-          <i>ENTER</i>. Hit <i>ESCAPE</i> to cancel input.
-        </p>
-        <p><strike>
-          Note that you can input html and it will be rendered in the
-          user's page. This may be insecure for now, so use cautiously.
-        </p></strike>
-        <p>
-          EDIT: This has been resolved :)
-        </p>
-      </blockquote>
-      <h4>Adding More Block Types</h4>
-      <blockquote>
-        <p>
-          There will be more blocks coming soon. Water,
-          weak/breakable walls, start location and doors
-        </p>
-      </blockquote>
+  <div class="row">
+    <div class="panel panel-default">
+      <div class="panel-heading">Popular Games</div>
+      <div class="panel-body">
+      {% for game in popular_games %}
+      ({{ game.players__count }}) <a href="{% url 'game_game' game.id %}">{{ game }}</a></br>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="panel panel-default">
+      <div class="panel-heading">News</div>
+      <div class="panel-body">
+        <h4>Chat is now available!</h4>
+        <blockquote>
+          <p>
+            To use, press <i>T</i> while in-game, type your message and hit
+            <i>ENTER</i>. Hit <i>ESCAPE</i> to cancel input.
+          </p>
+          <p><strike>
+              Note that you can input html and it will be rendered in the
+              user's page. This may be insecure for now, so use cautiously.
+          </p></strike>
+          <p>
+            EDIT: This has been resolved :)
+          </p>
+        </blockquote>
+        <h4>Adding More Block Types</h4>
+        <blockquote>
+          <p>
+            There will be more blocks coming soon. Water,
+            weak/breakable walls, start location and doors
+          </p>
+        </blockquote>
+      </div>
     </div>
   </div>
 </div>
