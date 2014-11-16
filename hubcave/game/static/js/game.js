@@ -221,7 +221,7 @@ function run_game() {
     update_ui();
 
     movespeed = blocksize / 20;
-    shootspeed = blocksize / 20;
+    shootspeed = blocksize / 10;
     rotatespeed = Math.PI / 50;
     edge_buffer = render_size / 3;
 
