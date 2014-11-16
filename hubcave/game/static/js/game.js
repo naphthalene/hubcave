@@ -126,13 +126,13 @@ function run_game() {
     function reset_player() {
         if(typeof hubcave_data.starting_x === 'undefined' ||
            typeof hubcave_data.starting_y === 'undefined') {
-            player_sprite.position.y = player_sprite.height / 2;
-            player_sprite.position.x = blocksize + player_sprite.width / 2;
+            player_sprite.position.y = player_sprite.height;
+            player_sprite.position.x = blocksize + player_sprite.width;
         } else {
             player_sprite.position.y = parseInt(hubcave_data.starting_x * blocksize +
-                                                player_sprite.width / 2);
+                                                player_sprite.width);
             player_sprite.position.x = parseInt(hubcave_data.starting_y * blocksize +
-                                                player_sprite.height / 2);
+                                                player_sprite.height);
         }
         player_hp = 100;
         player_ammo = 500;
@@ -281,7 +281,7 @@ function run_game() {
 
     socket.on('joining', function (data) {
                   $("#room_chat ul").prepend(
-                      '<li>' + chat_time_format() +
+                      '<li style="color: #00FF00;">' + chat_time_format() +
                           '<a href=/profile/' + data.data.user_id + '>' +
                           data.data.user_name + ' </a>Joined!</li>');
                   emit_player_data();
@@ -289,7 +289,7 @@ function run_game() {
 
     socket.on('leaving', function (data) {
                   $("#room_chat ul").prepend(
-                      '<li>' + chat_time_format() +
+                      '<li style="color: #FF0000;">' + chat_time_format() +
                           '<a href=/profile/' + data.user + '>' +
                           data.username + ' </a>Quit</li>');
                   scrollArea.removeChild(users[data.user].sprite);
