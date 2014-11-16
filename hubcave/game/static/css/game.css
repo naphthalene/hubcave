@@ -13,3 +13,5 @@ body {
 }
 
 #active_users ul li { display: inline; }
+
+#room_chat ul { list-style-type: none; }

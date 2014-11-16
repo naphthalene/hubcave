@@ -8,6 +8,7 @@ import fcntl
 import os
 
 from django.contrib.auth.models import User
+from django.utils import formats
 
 from socketio.namespace import BaseNamespace
 from socketio.mixins import BroadcastMixin
@@ -35,13 +36,14 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
                                        self.game.repository))
         self.player, created = Player.objects.get_or_create(user=self.user,
                                                             game=self.game)
-        msges = self.game.messages.all()[:10]
+        msges = self.game.messages.order_by('-when')[:15]
         self.emit('loading', {
             'map' : self.game.map_dict(),
             'messages' : map(lambda m: {
                 'user_id' : m.user.id,
                 'user_name': m.user.username,
-                'text' : m.text
+                'text' : m.text,
+                'when' : formats.date_format(m.when, "TIME_FORMAT")
             }, msges)
         })
         self.emit_to_room(str(self.game_id), 'joining', {
@@ -62,10 +64,12 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         print("[Room {}]({}) {}".format(str(self.game_id),
                                         data['user_name'],
                                         data['text']))
-        self.emit_to_room(str(self.game_id), 'msg', data)
         msg = Message.objects.create(user=self.user,
                                      game=self.game,
                                      text=data['text'])
+        msg.save()
+        data['when'] = msg.when
+        self.emit_to_room(str(self.game_id), 'msg', data)
         return True
 
     def on_player(self, data):

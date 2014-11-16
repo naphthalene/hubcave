@@ -108,3 +108,4 @@ class Message(models.Model):
     user = models.ForeignKey(User)
     game = models.ForeignKey(Game, related_name="messages")
     text = models.TextField()
+    when = models.DateTimeField(auto_now_add=True)

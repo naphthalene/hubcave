@@ -18,10 +18,10 @@ socket.on('connect', function () {
 
 socket.on('loading', function (data) {
               hubcave_data = data.map;
-              for (var i = 0; i < data.messages.length; ++i){
+              for (var i = data.messages.length - 1; i >= 0; --i){
                   var msg = data.messages[i];
-                  $("#room_chat ul").append(
-                      '<li>' +
+                  $("#room_chat ul").prepend(
+                      '<li>[' + msg.when + '] ' +
                           '<a href=/profile/' + msg.user_id + '>' +
                           msg.user_name + ' </a><span> ' +
                           msg.text + ' </span>' +
@@ -29,6 +29,22 @@ socket.on('loading', function (data) {
               }
               run_game();
           });
+
+function chat_time_format() {
+    var d = new Date();
+    var hr = d.getHours();
+    var min = d.getMinutes();
+    if (min < 10) {
+        min = "0" + min;
+    }
+    if (hr < 12) {
+        var ampm = " a.m.";
+    } else {
+        var ampm = " p.m.";
+        hr -= 12;
+    }
+    return "[" + hr + ":" + min + ampm + "] ";
+}
 
 function run_game() {
     // create an new instance of a pixi stage
@@ -264,16 +280,16 @@ function run_game() {
               });
 
     socket.on('joining', function (data) {
-                  $("#room_chat ul").append(
-                      '<li>' +
+                  $("#room_chat ul").prepend(
+                      '<li>' + chat_time_format() +
                           '<a href=/profile/' + data.data.user_id + '>' +
                           data.data.user_name + ' </a>Joined!</li>');
                   emit_player_data();
               });
 
     socket.on('leaving', function (data) {
-                  $("#room_chat ul").append(
-                      '<li>' +
+                  $("#room_chat ul").prepend(
+                      '<li>' + chat_time_format() +
                           '<a href=/profile/' + data.user + '>' +
                           data.username + ' </a>Quit</li>');
                   scrollArea.removeChild(users[data.user].sprite);
@@ -335,8 +351,8 @@ function run_game() {
 
     socket.on('msg', function (data) {
                   // Received message from someone
-                  $("#room_chat ul").append(
-                      '<li>' +
+                  $("#room_chat ul").prepend(
+                      '<li>[' + data.when + '] ' +
                           '<a href=/profile/' + data.user_id + '>' +
                           data.user_name + ' </a><span> ' +
                           data.text + ' </span>' +
@@ -453,8 +469,8 @@ function run_game() {
                                         user_name: user_name,
                                         text: chat_msg
                                     });
-                        $("#room_chat ul").append(
-                            '<li>' +
+                        $("#room_chat ul").prepend(
+                            '<li>' + chat_time_format() +
                                 '<a href=/profile/' + user_id + '>' +
                                 user_name + ' </a><span> ' +
                                 chat_msg +
