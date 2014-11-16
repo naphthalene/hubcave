@@ -28,8 +28,11 @@ class DashboardView(TemplateView):
         context = super(DashboardView, self).get_context_data(**kwargs)
         # Display repositories
         dash, _ = Dashboard.objects.get_or_create(user=self.request.user)
-        dash.get_or_update_games()
+        try:
+            dash.get_or_update_games()
+        except:
+            print("Failed to get or update games")
+
         context['sidebar_users'] = self.active_users()
         context['sidebar_games'] = Game.objects.filter(user=self.request.user)
-        print self.request.user.username
         return context

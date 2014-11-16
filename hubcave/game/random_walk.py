@@ -13,7 +13,6 @@ def random_walk(map_size=MAP_SIZE, floor_coverage=FLOOR_COVERAGE, init_buffer=IN
 
     # Generate initial pos
     offset = int(map_size * (init_buffer / 100.0))
-    print offset
     current_position = (offset + int(floor(random() * (map_size - 2 * offset))),
                         offset + int(floor(random() * (map_size - 2 * offset))))
     original_position = current_position
@@ -45,7 +44,6 @@ def random_walk(map_size=MAP_SIZE, floor_coverage=FLOOR_COVERAGE, init_buffer=IN
             initial_map[current_position[0]][current_position[1]] = 1
             floor_tile_count += 1
 
-    show(initial_map)
     return (original_position, initial_map)
 
 def show(m):

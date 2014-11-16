@@ -24,7 +24,6 @@ class Dashboard(models.Model):
         new_repos = []
         try:
             all_games = Game.objects.filter(user=self.user)
-            print all_games
             if all_games is not None:
                 all_games_repos = map(lambda g: g.repository, all_games)
                 new_repos = filter(lambda r: r.name not in all_games_repos,

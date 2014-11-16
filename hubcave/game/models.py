@@ -85,11 +85,9 @@ class Game(models.Model):
         for i, row in enumerate(structure):
             for j, el in enumerate(row):
                 blk = gmap.blockdata.add()
-                print el
                 blk.blktype = el
                 blk.x = i
                 blk.y = j
-        # print gmap.blockdata
         self.map_data = gmap.SerializeToString()
         self.save()
 
