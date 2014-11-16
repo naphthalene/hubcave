@@ -16,7 +16,6 @@ body {
 
 #room_chat ul {
     list-style-type: none; 
-    width: 150px;
-    height: 150px;
+    height: 500px;
     overflow: scroll;
 }
