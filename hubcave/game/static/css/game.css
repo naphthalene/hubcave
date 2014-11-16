@@ -15,8 +15,8 @@ body {
 #active_users ul li { display: inline; }
 
 #room_chat ul {
-    list-style-type: none; 
-    width: 150px;
-    height: 150px;
+    list-style-type: none;
+    height: 450px;
     overflow: scroll;
+    overflow-x: hidden;
 }

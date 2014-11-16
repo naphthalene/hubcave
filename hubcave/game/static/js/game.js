@@ -80,6 +80,8 @@ function run_game() {
 
     scrollArea = new PIXI.DisplayObjectContainer();
     scrollArea.interactive = true;
+    scrollArea.buttonMode = true;
+    scrollArea.defaultCursor = "crosshair";
 
     var max_width = 0,
     max_height = 0;
