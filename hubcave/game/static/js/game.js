@@ -427,6 +427,17 @@ function run_game() {
 
     var typing = false;
 
+    $('#chat_input').focus(
+        function() {
+            console.log("Focused by mouse");
+            typing = true;
+        });
+
+    $('#chat_input').onblur = function() {
+        typing = false;
+        $('.rendererView').focus();
+    };
+
     kd.T.up(function() {
                 var chat_input = $('#chat_input');
                 if (!typing) {
@@ -489,26 +500,32 @@ function run_game() {
                 y: player_sprite.y
             };
             var do_emit = true;
-            if (kd.A.isDown()) {
-                player_sprite.position.x -= movespeed;
-            }
-            else if (kd.D.isDown()) {
-                player_sprite.position.x += movespeed;
-            }
-            else if (kd.W.isDown()) {
-                player_sprite.position.y -= movespeed;
-            }
-            else if (kd.S.isDown()) {
-                player_sprite.position.y += movespeed;
-            }
-            else {
+            if (!typing){
+                // Keyboard rotation handling
+                if (kd.RIGHT.isDown()) {
+                    player_sprite.rotation += rotatespeed;
+                }
+                else if (kd.LEFT.isDown()) {
+                    player_sprite.rotation -= rotatespeed;
+                }
+                // Movement handling
+                if (kd.A.isDown()) {
+                    player_sprite.position.x -= movespeed;
+                }
+                else if (kd.D.isDown()) {
+                    player_sprite.position.x += movespeed;
+                }
+                else if (kd.W.isDown()) {
+                    player_sprite.position.y -= movespeed;
+                }
+                else if (kd.S.isDown()) {
+                    player_sprite.position.y += movespeed;
+                }
+                else {
+                    do_emit = false;
+                }
+            } else {
                 do_emit = false;
-            }
-            if (kd.RIGHT.isDown()) {
-                player_sprite.rotation += rotatespeed;
-            }
-            else if (kd.LEFT.isDown()) {
-                player_sprite.rotation -= rotatespeed;
             }
 
             if (colliding_with_map(player_sprite)) {
