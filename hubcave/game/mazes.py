@@ -100,7 +100,8 @@ def draw_tree(spanning, height, width):
     img_width = width * 2 + 1
     pixels = []
 
-    # Add a row of off pixels for the top
+    # Add two rows of off pixels for the top
+    pixels.append([0] * (img_width))
     pixels.append([0] + [1] + ([0] * (img_width-2)))
     print pixels, width-2
 
@@ -125,5 +126,6 @@ def draw_tree(spanning, height, width):
 
     # Add a row of off pixels for the bottom
     pixels.append(([0] * (img_width-2)) + [1] + [0])
+    pixels.append([0] * (img_width))
 
-    return pixels
+    return ((1, 1), pixels)

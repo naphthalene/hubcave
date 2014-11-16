@@ -5,7 +5,7 @@ from hubcave.game import views
 
 urlpatterns = patterns(
     '',
-    url(r'^game/update/(?P<pk>\w+)$',
+    url(r'^game/update/(?P<pk>\w+)/$',
         login_required(views.GameUpdate.as_view(), login_url='/'),
         name='game_game_update'),
     url(r'^game/(?P<pk>\w+)/$',

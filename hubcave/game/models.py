@@ -81,7 +81,11 @@ class Game(models.Model):
             gmap.starting_y = starting_y
         else:
             map_size = 10
-            structure = min_cost_spanning_tree(map_size, map_size)
+            (starting_x, starting_y), structure = min_cost_spanning_tree(map_size, map_size)
+            self.starting_x = starting_x
+            gmap.starting_x = starting_x
+            self.starting_y = starting_y
+            gmap.starting_y = starting_y
         for i, row in enumerate(structure):
             for j, el in enumerate(row):
                 blk = gmap.blockdata.add()
