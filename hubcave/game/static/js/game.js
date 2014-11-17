@@ -363,7 +363,7 @@ function run_game() {
     };
 
     function update_player_sprite_rotation(sprite) {
-        var dist_x = srite.mouse_x -
+        var dist_x = sprite.mouse_x -
             (sprite.getBounds().x + sprite.getBounds().width / 2);
         var dist_y = sprite.mouse_y -
             (sprite.getBounds().y + sprite.getBounds().height / 2);
