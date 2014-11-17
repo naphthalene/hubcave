@@ -131,45 +131,11 @@ function run_game() {
                              });
     player_sprite.addChild(nick);
 
-    enemies = [];
+    // enemies = [];
 
     scrollArea.addChild(player_sprite);
 
-    // vignette_sprite = new PIXI.Sprite(vignetteTexture);
-    // vignette_position = function(){
-    //     vignette_sprite.position.x = player_sprite.position.x -
-    //         vignette_sprite.width / 2 +
-    //         player_sprite.width / 2;
-    //     vignette_sprite.position.y = player_sprite.position.y -
-    //         vignette_sprite.height / 2 +
-    //         player_sprite.height / 2;
-    // };
-    // vignette_position();
-    // scrollArea.addChild(vignette_sprite);
-
     stage.addChild(scrollArea);
-
-    // Define our items
-    // Location is 2D vector
-    function Item (type, location) {
-        this.type = type;
-        this.sprite.location = location;
-        this.sprite.pivot.x = this.sprite.width;
-        this.sprite.pivot.y = this.sprite.height;
-        // Add a random rotation, why not
-        this.sprite.rotation = Math.random() * Math.pi * 2;
-        // Inheriting classes can override this anyway
-    }
-
-    function Item__Gold(location, opts){
-        Item.apply(this, 'item__gold', location);
-    }
-    Item__Gold.prototype.sprite = PIXI.Texture.fromImage("/static/img/items/gold.png");
-
-    function Item__Arrow(location, opts){
-        Item.apply(this, 'item__arrow', location);
-    }
-    Item__Arrow.prototype.sprite = projectileTexture;
 
     // Add ui overlay
     ui_show = true;
@@ -183,63 +149,119 @@ function run_game() {
     ui.buttonMode = true;
     stage.addChild(ui);
 
-    inventory = new PIXI.Graphics();
-    // inventory.x = 5;
-    // inventory.y = 5;
-    // inventory.width = render_size - 5;
-    // inventory.height = 40;
+    uigfx = new PIXI.Graphics();
+
+    ui.addChild(uigfx);
+
+    uigfx.beginFill(0xFFFFFF, 0.8);
+    uigfx.drawRect(5,5, render_size - 10, 60);
+    uigfx.endFill();
+
+    inventory = new PIXI.DisplayObjectContainer();
+    // Initial offsets from the left and top
+    inventory.position.x = 15;
+    inventory.position.y = 3;
 
     ui.addChild(inventory);
 
-    inventory.beginFill(0xFFFFFF, 0.3);
-    inventory.drawRect(5,5, render_size - 10, 40);
-    inventory.endFill();
+    // This should be set by the server over the socket on 'loading'
+    // This is a list of Items defined above (at most 9 here)
+    function Inventory (items) {
+        this.items = items;
+    }
+
+    Inventory.prototype.addItem = function(item) {
+        if (this.items.length < 9){
+            this.items.push(item);
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    Inventory.prototype.popItem = function(item) {
+        this.items.pop(item);
+    };
+
+    inventory_items = new Inventory([]);
+
+    function Item(type) {
+        this.type = type;
+    }
+
+    function InventoryItem(type) {
+        Item.apply(this, [type]);
+    }
+    // Define prototype functions for inventory items
+
+    // Define our items
+    // Location is 2D vector
+    function MapItem (type, location) {
+        Item.apply(this, [type]);
+        this.sprite.location = location;
+        this.sprite.pivot.x = this.sprite.width;
+        this.sprite.pivot.y = this.sprite.height;
+        // Add a random rotation, why not
+        // Inheriting classes can override this anyway
+        this.sprite.rotation = Math.random() * Math.pi * 2;
+    }
+    MapItem.prototype.collect = function () {
+        // No op by default
+        console.log("Collected item " + this.type);
+    };
+
+    function Item__Gold(location, opts){
+        MapItem.apply(this, ['item__gold', location]);
+    }
+    Item__Gold.prototype.sprite = PIXI.Texture.fromImage("/static/img/items/gold.png");
+
+    function Item__Arrow(location, opts){
+        MapItem.apply(this, ['item__arrow', location]);
+    }
+    Item__Arrow.prototype.sprite = projectileTexture;
+
+    function Item__Bow(opts){
+        InventoryItem.apply(this, ['item__bow']);
+    }
+    Item__Bow.prototype.sprite = PIXI.Texture.fromImage("/static/img/items/bow.png");
+
+    // For now, start off with just a bow
+    inventory_items.addItem(new Item__Bow());
+    console.log(inventory_items);
+
+    // Draw the inventory boxes/items. May be able to use the item sprites
 
     hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
-                                      { fill: 'white' });
-    hitpoints_counter.x = 15;
-    hitpoints_counter.y = 15;
+                                      { fill: 'white',
+                                        font: 'bold 13px Arial' });
 
+    hitpoints_counter.x = 15;
+    hitpoints_counter.y = 65;
     ui.addChild(hitpoints_counter);
 
     ammo_counter = new PIXI.Text("Ammo: " + player_ammo.toString(),
-                                      { fill: 'white' });
+                                      { fill: 'white' ,
+                                        font: 'bold 13px Arial'});
     ammo_counter.x = 30 + hitpoints_counter.width;
-    ammo_counter.y = 15;
+    ammo_counter.y = 65;
 
     ui.addChild(ammo_counter);
 
-    ui.mousedown = function(idata) {
-        console.log(idata.originalEvent.layerX, idata.originalEvent.layerY);
-    };
-
-    // var ui_panel = new PIXI.DisplayObjectContainer();
-    // ui_panel.position.x = 15;
-    // ui_panel.position.y = 15;
-    // ui_panel.width = render_size - 15;
-    // ui_panel.height = blocksize - 15;
-    // ui_panel.interactive = true;
-    // ui_panel.alpha = 0.5;
-
-    // ui_panel.buttonMode = true;
-    // ui.addChild(ui_panel);
-
-    // hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
-    //                                   { fill: 'white' });
-
-    // ui_panel.addChild(hitpoints_counter);
-    // stage.addChild(ui);
-
     function update_ui(){
         if (ui_show){
-            // ui.removeChild(hitpoints_counter);
+            // The width of each item in the inventory is 50px
+            // Put a 2px margin between each item as well
+            // Update the inventory
             hitpoints_counter.setText("HP: " + player_hp.toString());
             ammo_counter.setText("Ammo: " + player_ammo.toString());
-            // ui.addChild(hitpoints_counter);
         }
     }
 
     update_ui();
+
+    ui.mousedown = function(idata) {
+        console.log(idata.originalEvent.layerX, idata.originalEvent.layerY);
+    };
 
     movespeed = blocksize / 20;
     shootspeed = blocksize / 10;
