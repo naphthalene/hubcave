@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
+
+module1 = Extension('demo',
+                    sources = ['demo.c'],
+                    include_dirs = ['/usr/local/include'])
 
 setup_requires = []
 
