@@ -363,9 +363,9 @@ function run_game() {
     };
 
     function update_player_sprite_rotation(sprite) {
-        var dist_x = player_sprite.mouse_x -
+        var dist_x = srite.mouse_x -
             (sprite.getBounds().x + sprite.getBounds().width / 2);
-        var dist_y = player_sprite.mouse_y -
+        var dist_y = sprite.mouse_y -
             (sprite.getBounds().y + sprite.getBounds().height / 2);
 
         sprite.rotation = Math.atan2(-dist_x, dist_y);
