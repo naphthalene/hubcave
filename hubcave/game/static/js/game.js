@@ -29,26 +29,9 @@ socket.on('loading', function (data) {
               run_game();
           });
 
-function chat_time_format() {
-    var d = new Date();
-    var hr = d.getHours();
-    var min = d.getMinutes();
-    if (min < 10) {
-        min = "0" + min;
-    }
-    if (hr < 12) {
-        var ampm = " a.m.";
-    } else {
-        var ampm = " p.m.";
-        hr -= 12;
-    }
-    return "[" + hr + ":" + min + ampm + "] ";
-}
-
 function run_game() {
     // create an new instance of a pixi stage
     var stage = new PIXI.Stage(0x000000);
-    graphics = new PIXI.Graphics();
 
     var render_size = Math.min($('#game_panel').width() - 50,
                                $('#game_panel').width());
@@ -166,6 +149,28 @@ function run_game() {
 
     stage.addChild(scrollArea);
 
+    // Define our items
+    // Location is 2D vector
+    function Item (type, location) {
+        this.type = type;
+        this.sprite.location = location;
+        this.sprite.pivot.x = this.sprite.width;
+        this.sprite.pivot.y = this.sprite.height;
+        // Add a random rotation, why not
+        this.sprite.rotation = Math.random() * Math.pi * 2;
+        // Inheriting classes can override this anyway
+    }
+
+    function Item__Gold(location, opts){
+        Item.apply(this, 'item__gold', location);
+    }
+    Item__Gold.prototype.sprite = PIXI.Texture.fromImage("/static/img/items/gold.png");
+
+    function Item__Arrow(location, opts){
+        Item.apply(this, 'item__arrow', location);
+    }
+    Item__Arrow.prototype.sprite = projectileTexture;
+
     // Add ui overlay
     ui_show = true;
 
@@ -175,8 +180,20 @@ function run_game() {
     ui.width = render_size;
     ui.height = blocksize;
     ui.interactive = true;
+    ui.buttonMode = true;
+    stage.addChild(ui);
 
-    // ui.drawRect(15, 15, render_size - 15, blocksize - 15);
+    inventory = new PIXI.Graphics();
+    // inventory.x = 5;
+    // inventory.y = 5;
+    // inventory.width = render_size - 5;
+    // inventory.height = 40;
+
+    ui.addChild(inventory);
+
+    inventory.beginFill(0xFFFFFF, 0.3);
+    inventory.drawRect(5,5, render_size - 10, 40);
+    inventory.endFill();
 
     hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
                                       { fill: 'white' });
@@ -192,7 +209,9 @@ function run_game() {
 
     ui.addChild(ammo_counter);
 
-    stage.addChild(ui);
+    ui.mousedown = function(idata) {
+        console.log(idata.originalEvent.layerX, idata.originalEvent.layerY);
+    };
 
     // var ui_panel = new PIXI.DisplayObjectContainer();
     // ui_panel.position.x = 15;
@@ -278,6 +297,22 @@ function run_game() {
                       update_active_users();
                   }
               });
+
+    function chat_time_format() {
+        var d = new Date();
+        var hr = d.getHours();
+        var min = d.getMinutes();
+        if (min < 10) {
+            min = "0" + min;
+        }
+        if (hr < 12) {
+            var ampm = " a.m.";
+        } else {
+            var ampm = " p.m.";
+            hr -= 12;
+        }
+        return "[" + hr + ":" + min + ampm + "] ";
+    }
 
     socket.on('joining', function (data) {
                   $("#room_chat ul").prepend(
@@ -543,7 +578,7 @@ function run_game() {
 
     function update_projectiles() {
         // See if you can refactor, this might get really slow
-        // Empirically is okay, but with many users in a map could bring 
+        // Empirically is okay, but with many users in a map could bring
         // down the DO box
         for (var user in projectiles) {
             for (var i = 0; i < projectiles[user].length; ++i){
