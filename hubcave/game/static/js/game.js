@@ -29,6 +29,8 @@ socket.on('loading', function (data) {
               run_game();
           });
 
+// Let us kick off the show
+
 function run_game() {
     // create an new instance of a pixi stage
     var stage = new PIXI.Stage(0x000000);
@@ -36,11 +38,10 @@ function run_game() {
     var render_size = Math.min($('#game_panel').width() - 50,
                                $('#game_panel').width());
 
-
     var renderer = PIXI.autoDetectRenderer(render_size,
                                            render_size);
 
-
+    // Define textures
     var wallTexture = PIXI.Texture.fromImage("/static/img/wall.png");
     var floorTexture = PIXI.Texture.fromImage("/static/img/floortile.png");
     var projectileTexture = PIXI.Texture.fromImage("/static/img/arrow.png");
@@ -103,7 +104,11 @@ function run_game() {
     // Items/keys -> map 2-0 keys to select
     // HP/ammo
 
+    // DECLARE PLAYER OBJECT
+
     player_sprite = new PIXI.Sprite(charTexture);
+    player_sprite.velocity_x = 0
+    player_sprite.velocity_y = 0
     player_sprite.width = blocksize / 2;
     player_sprite.height = blocksize / 2;
     function reset_player() {
@@ -134,18 +139,6 @@ function run_game() {
     enemies = [];
 
     scrollArea.addChild(player_sprite);
-
-    // vignette_sprite = new PIXI.Sprite(vignetteTexture);
-    // vignette_position = function(){
-    //     vignette_sprite.position.x = player_sprite.position.x -
-    //         vignette_sprite.width / 2 +
-    //         player_sprite.width / 2;
-    //     vignette_sprite.position.y = player_sprite.position.y -
-    //         vignette_sprite.height / 2 +
-    //         player_sprite.height / 2;
-    // };
-    // vignette_position();
-    // scrollArea.addChild(vignette_sprite);
 
     stage.addChild(scrollArea);
 
@@ -242,6 +235,9 @@ function run_game() {
     update_ui();
 
     movespeed = blocksize / 20;
+    var max_abs_velocity = movespeed;
+    var player_friction_coefficient = 0.95;
+    var player_acceleration = 1;
     shootspeed = blocksize / 10;
     rotatespeed = Math.PI / 50;
     edge_buffer = render_size / 3;
@@ -362,12 +358,17 @@ function run_game() {
     emit_player_data();
 
     scrollArea.mousemove = function(idata) {
-        var dist_x = idata.originalEvent.layerX -
-            (player_sprite.getBounds().x + player_sprite.getBounds().width / 2);
-        var dist_y = idata.originalEvent.layerY -
-            (player_sprite.getBounds().y + player_sprite.getBounds().height / 2);
-        player_sprite.rotation = Math.atan2(-dist_x, dist_y);
-        // emit_player_data();
+        player_sprite.mouse_x = idata.originalEvent.layerX
+        player_sprite.mouse_y = idata.originalEvent.layerY
+    };
+
+    function update_player_sprite_rotation(sprite) {
+        var dist_x = srite.mouse_x -
+            (sprite.getBounds().x + sprite.getBounds().width / 2);
+        var dist_y = sprite.mouse_y -
+            (sprite.getBounds().y + sprite.getBounds().height / 2);
+
+        sprite.rotation = Math.atan2(-dist_x, dist_y);
     };
 
     function shootProjectile(user, position, rotation) {
@@ -420,12 +421,13 @@ function run_game() {
         var below_block = Math.floor((sprite.y + sprite.pivot.x / 2) / blocksize);
         var above_block = Math.max(Math.floor((sprite.y - sprite.pivot.x / 2) / blocksize), 0);
 
-        return (above_block < 0 | left_block < 0 |
-                below_block >= max_width |
+
+        return (above_block < 0 || left_block < 0 ||
+                below_block >= max_width ||
                 right_block >= max_width) ||
-            !(terrain[below_block][right_block] &
-              terrain[below_block][left_block] &
-              terrain[above_block][right_block] &
+            !(terrain[below_block][right_block] &&
+              terrain[below_block][left_block] &&
+              terrain[above_block][right_block] &&
               terrain[above_block][left_block]);
     }
 
@@ -528,14 +530,24 @@ function run_game() {
                     }
             });
 
+    // adds velocity to player sprite for x or y within max_abs_velocity bounds
+    function add_player_velocity(velo_delta, direction) {
+      if (direction == 'x') {
+        if (Math.abs(player_sprite.velocity_x) <= max_abs_velocity) {
+          player_sprite.velocity_x += (velo_delta * player_acceleration);
+        }
+      } else if (direction == 'y') {
+        if (Math.abs(player_sprite.velocity_y) <= max_abs_velocity) {
+          player_sprite.velocity_y += (velo_delta * player_acceleration);
+        }
+      }
+    }
+
     function handle_input() {
         if (!typing) {
-            var original_position = {
-                x: player_sprite.x,
-                y: player_sprite.y
-            };
             var do_emit = true;
             if (!typing){
+
                 // Keyboard rotation handling
                 if (kd.RIGHT.isDown()) {
                     player_sprite.rotation += rotatespeed;
@@ -543,36 +555,66 @@ function run_game() {
                 else if (kd.LEFT.isDown()) {
                     player_sprite.rotation -= rotatespeed;
                 }
-                // Movement handling
-                if (kd.A.isDown()) {
-                    player_sprite.position.x -= movespeed;
+
+                // handle lateral motion
+                if (kd.A.isDown() && !kd.D.isDown()) {
+                    add_player_velocity(-1,'x');
                 }
-                else if (kd.D.isDown()) {
-                    player_sprite.position.x += movespeed;
+                else if (kd.D.isDown() && !kd.A.isDown()) {
+                    add_player_velocity(1,'x');
                 }
-                else if (kd.W.isDown()) {
-                    player_sprite.position.y -= movespeed;
+
+                // handle verticle motion
+                if (kd.W.isDown() && !kd.S.isDown()) {
+                    add_player_velocity(-1,'y');
                 }
-                else if (kd.S.isDown()) {
-                    player_sprite.position.y += movespeed;
+                else if (kd.S.isDown() && !kd.W.isDown()) {
+                    add_player_velocity(1,'y');
                 }
-                else {
-                    do_emit = false;
-                }
+
             } else {
                 do_emit = false;
             }
 
-            if (colliding_with_map(player_sprite)) {
-                player_sprite.position.x = original_position.x;
-                player_sprite.position.y = original_position.y;
-            }
-            // vignette_position();
+                        // vignette_position();
             update_scroll();
             if (do_emit) {
                 emit_player_data();
             }
         }
+    }
+
+    function update_player_physics () {
+      do_emit = false;
+      var original_position = {
+          x: player_sprite.x,
+          y: player_sprite.y
+      };
+      // emulate friction
+      player_sprite.velocity_x *= player_friction_coefficient
+      player_sprite.velocity_y *= player_friction_coefficient
+
+      // if the player is moving emit locational data
+      if (Math.abs(player_sprite.velocity_x) >= 1 || Math.abs(player_sprite.velocity_y) >= 1) {
+        do_emit = true;
+      }
+
+      if (do_emit) {
+        // move the sprite baesd on current velocity
+        player_sprite.position.x += player_sprite.velocity_x;
+        player_sprite.position.y += player_sprite.velocity_y;
+
+        // check for collisions
+        if (colliding_with_map(player_sprite)) {
+          player_sprite.position.x = original_position.x;
+          player_sprite.position.y = original_position.y;
+        }
+
+        // update rotation
+        update_player_sprite_rotation(player_sprite);
+
+        emit_player_data();
+      }
     }
 
 
@@ -616,6 +658,7 @@ function run_game() {
 
     function animate() {
         handle_input();
+        update_player_physics();
         update_projectiles();
         update_ui();
         requestAnimFrame( animate );
