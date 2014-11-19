@@ -24,6 +24,12 @@ DATABASES = {
 }
 
 SECRET_KEY = %(default_key)r
+SOCIAL_AUTH_GITHUB_KEY = ''
+SOCIAL_AUTH_GITHUB_SECRET = ''
+SOCKETIO_ENABLED = True
+
+USE_TZ = False # Temporary chat fix
+TIME_ZONE = "America/New_York"
 """
 
 
