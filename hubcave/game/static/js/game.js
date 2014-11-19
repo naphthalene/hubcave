@@ -29,35 +29,19 @@ socket.on('loading', function (data) {
               run_game();
           });
 
-function chat_time_format() {
-    var d = new Date();
-    var hr = d.getHours();
-    var min = d.getMinutes();
-    if (min < 10) {
-        min = "0" + min;
-    }
-    if (hr < 12) {
-        var ampm = " a.m.";
-    } else {
-        var ampm = " p.m.";
-        hr -= 12;
-    }
-    return "[" + hr + ":" + min + ampm + "] ";
-}
+// Let us kick off the show
 
 function run_game() {
     // create an new instance of a pixi stage
     var stage = new PIXI.Stage(0x000000);
-    graphics = new PIXI.Graphics();
 
     var render_size = Math.min($('#game_panel').width() - 50,
                                $('#game_panel').width());
 
-
     var renderer = PIXI.autoDetectRenderer(render_size,
                                            render_size);
 
-
+    // Define textures
     var wallTexture = PIXI.Texture.fromImage("/static/img/wall.png");
     var floorTexture = PIXI.Texture.fromImage("/static/img/floortile.png");
     var projectileTexture = PIXI.Texture.fromImage("/static/img/arrow.png");
@@ -120,9 +104,15 @@ function run_game() {
     // Items/keys -> map 2-0 keys to select
     // HP/ammo
 
+    // DECLARE PLAYER OBJECT
+
     player_sprite = new PIXI.Sprite(charTexture);
+    player_sprite.velocity_x = 0;
+    player_sprite.velocity_y = 0;
     player_sprite.width = blocksize / 2;
     player_sprite.height = blocksize / 2;
+    player_sprite.previous_position = {};
+
     function reset_player() {
         if(typeof hubcave_data.starting_x === 'undefined' ||
            typeof hubcave_data.starting_y === 'undefined') {
@@ -152,19 +142,29 @@ function run_game() {
 
     scrollArea.addChild(player_sprite);
 
-    // vignette_sprite = new PIXI.Sprite(vignetteTexture);
-    // vignette_position = function(){
-    //     vignette_sprite.position.x = player_sprite.position.x -
-    //         vignette_sprite.width / 2 +
-    //         player_sprite.width / 2;
-    //     vignette_sprite.position.y = player_sprite.position.y -
-    //         vignette_sprite.height / 2 +
-    //         player_sprite.height / 2;
-    // };
-    // vignette_position();
-    // scrollArea.addChild(vignette_sprite);
-
     stage.addChild(scrollArea);
+
+    // Define our items
+    // Location is 2D vector
+    function Item (type, location) {
+        this.type = type;
+        this.sprite.location = location;
+        this.sprite.pivot.x = this.sprite.width;
+        this.sprite.pivot.y = this.sprite.height;
+        // Add a random rotation, why not
+        this.sprite.rotation = Math.random() * Math.pi * 2;
+        // Inheriting classes can override this anyway
+    }
+
+    function Item__Gold(location, opts){
+        Item.apply(this, 'item__gold', location);
+    }
+    Item__Gold.prototype.sprite = PIXI.Texture.fromImage("/static/img/items/gold.png");
+
+    function Item__Arrow(location, opts){
+        Item.apply(this, 'item__arrow', location);
+    }
+    Item__Arrow.prototype.sprite = projectileTexture;
 
     // Add ui overlay
     ui_show = true;
@@ -175,8 +175,20 @@ function run_game() {
     ui.width = render_size;
     ui.height = blocksize;
     ui.interactive = true;
+    ui.buttonMode = true;
+    stage.addChild(ui);
 
-    // ui.drawRect(15, 15, render_size - 15, blocksize - 15);
+    inventory = new PIXI.Graphics();
+    // inventory.x = 5;
+    // inventory.y = 5;
+    // inventory.width = render_size - 5;
+    // inventory.height = 40;
+
+    ui.addChild(inventory);
+
+    inventory.beginFill(0xFFFFFF, 0.3);
+    inventory.drawRect(5,5, render_size - 10, 40);
+    inventory.endFill();
 
     hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
                                       { fill: 'white' });
@@ -192,24 +204,9 @@ function run_game() {
 
     ui.addChild(ammo_counter);
 
-    stage.addChild(ui);
-
-    // var ui_panel = new PIXI.DisplayObjectContainer();
-    // ui_panel.position.x = 15;
-    // ui_panel.position.y = 15;
-    // ui_panel.width = render_size - 15;
-    // ui_panel.height = blocksize - 15;
-    // ui_panel.interactive = true;
-    // ui_panel.alpha = 0.5;
-
-    // ui_panel.buttonMode = true;
-    // ui.addChild(ui_panel);
-
-    // hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
-    //                                   { fill: 'white' });
-
-    // ui_panel.addChild(hitpoints_counter);
-    // stage.addChild(ui);
+    ui.mousedown = function(idata) {
+        console.log(idata.originalEvent.layerX, idata.originalEvent.layerY);
+    };
 
     function update_ui(){
         if (ui_show){
@@ -223,9 +220,13 @@ function run_game() {
     update_ui();
 
     movespeed = blocksize / 20;
+    var max_abs_velocity = movespeed;
+    var player_friction_coefficient = 0.95;
+    var wall_bounce_coefficient = 0.02;
+    var player_acceleration = 1;
     shootspeed = blocksize / 10;
     rotatespeed = Math.PI / 50;
-    edge_buffer = render_size / 3;
+    edge_buffer = render_size / 2.5;
 
     scrollArea.position.x = -(player_sprite.position.x * scrollArea.scale.x);
     scrollArea.position.y = -(player_sprite.position.y * scrollArea.scale.y);
@@ -279,6 +280,22 @@ function run_game() {
                   }
               });
 
+    function chat_time_format() {
+        var d = new Date();
+        var hr = d.getHours();
+        var min = d.getMinutes();
+        if (min < 10) {
+            min = "0" + min;
+        }
+        if (hr < 12) {
+            var ampm = " a.m.";
+        } else {
+            var ampm = " p.m.";
+            hr -= 12;
+        }
+        return "[" + hr + ":" + min + ampm + "] ";
+    }
+
     socket.on('joining', function (data) {
                   $("#room_chat ul").prepend(
                       '<li style="color: #00FF00;">' + chat_time_format() +
@@ -327,12 +344,18 @@ function run_game() {
     emit_player_data();
 
     scrollArea.mousemove = function(idata) {
-        var dist_x = idata.originalEvent.layerX -
+        player_sprite.mouse_x = idata.originalEvent.layerX;
+        player_sprite.mouse_y = idata.originalEvent.layerY;
+        update_player_sprite_rotation();
+    };
+
+    function update_player_sprite_rotation() {
+        var dist_x = player_sprite.mouse_x -
             (player_sprite.getBounds().x + player_sprite.getBounds().width / 2);
-        var dist_y = idata.originalEvent.layerY -
+        var dist_y = player_sprite.mouse_y -
             (player_sprite.getBounds().y + player_sprite.getBounds().height / 2);
+
         player_sprite.rotation = Math.atan2(-dist_x, dist_y);
-        // emit_player_data();
     };
 
     function shootProjectile(user, position, rotation) {
@@ -379,20 +402,21 @@ function run_game() {
 
     requestAnimFrame( animate );
 
-    function colliding_with_map(sprite){
+     function colliding_with_map(sprite){
         var right_block = Math.floor((sprite.x + sprite.pivot.x / 2) / blocksize);
         var left_block = Math.max(Math.floor((sprite.x - sprite.pivot.x / 2) / blocksize), 0);
         var below_block = Math.floor((sprite.y + sprite.pivot.x / 2) / blocksize);
         var above_block = Math.max(Math.floor((sprite.y - sprite.pivot.x / 2) / blocksize), 0);
 
-        return (above_block < 0 | left_block < 0 |
-                below_block >= max_width |
+
+        return (above_block < 0 || left_block < 0 ||
+                below_block >= max_width ||
                 right_block >= max_width) ||
-            !(terrain[below_block][right_block] &
-              terrain[below_block][left_block] &
-              terrain[above_block][right_block] &
+            !(terrain[below_block][right_block] &&
+              terrain[below_block][left_block] &&
+              terrain[above_block][right_block] &&
               terrain[above_block][left_block]);
-    }
+     }
 
     function is_intersecting(r1, r2) {
         return !(r2.x > (r1.x + r1.width)  ||
@@ -493,14 +517,24 @@ function run_game() {
                     }
             });
 
+    // adds velocity to player sprite for x or y within max_abs_velocity bounds
+    function add_player_velocity(velo_delta, direction) {
+        if (direction == 'x') {
+            if (Math.abs(player_sprite.velocity_x) <= max_abs_velocity) {
+                player_sprite.velocity_x += (velo_delta * player_acceleration);
+            }
+        } else if (direction == 'y') {
+            if (Math.abs(player_sprite.velocity_y) <= max_abs_velocity) {
+                player_sprite.velocity_y += (velo_delta * player_acceleration);
+            }
+        }
+    }
+
     function handle_input() {
         if (!typing) {
-            var original_position = {
-                x: player_sprite.x,
-                y: player_sprite.y
-            };
             var do_emit = true;
             if (!typing){
+
                 // Keyboard rotation handling
                 if (kd.RIGHT.isDown()) {
                     player_sprite.rotation += rotatespeed;
@@ -508,31 +542,44 @@ function run_game() {
                 else if (kd.LEFT.isDown()) {
                     player_sprite.rotation -= rotatespeed;
                 }
-                // Movement handling
-                if (kd.A.isDown()) {
-                    player_sprite.position.x -= movespeed;
+
+                // handle lateral motion
+                if (kd.A.isDown() && !kd.D.isDown()) {
+                    if (kd.W.isDown() || kd.S.isDown()){
+                        add_player_velocity(-1 / Math.sqrt(2),'x');
+                    } else {
+                        add_player_velocity(-1,'x');
+                    }
                 }
-                else if (kd.D.isDown()) {
-                    player_sprite.position.x += movespeed;
+                else if (kd.D.isDown() && !kd.A.isDown()) {
+                    if (kd.W.isDown() || kd.S.isDown()){
+                        add_player_velocity(1 / Math.sqrt(2),'x');
+                    } else{
+                        add_player_velocity(1,'x');
+                    }
                 }
-                else if (kd.W.isDown()) {
-                    player_sprite.position.y -= movespeed;
+
+                // handle verticle motion
+                if (kd.W.isDown() && !kd.S.isDown()) {
+                    if (kd.A.isDown() || kd.D.isDown()){
+                        add_player_velocity(-1 / Math.sqrt(2),'y');
+                    } else {
+                        add_player_velocity(-1,'y');
+                    }
                 }
-                else if (kd.S.isDown()) {
-                    player_sprite.position.y += movespeed;
+                else if (kd.S.isDown() && !kd.W.isDown()) {
+                    if (kd.A.isDown() || kd.D.isDown()){
+                        add_player_velocity(1 / Math.sqrt(2),'y');
+                    } else {
+                        add_player_velocity(1,'y');
+                    }
                 }
-                else {
-                    do_emit = false;
-                }
+
             } else {
                 do_emit = false;
             }
 
-            if (colliding_with_map(player_sprite)) {
-                player_sprite.position.x = original_position.x;
-                player_sprite.position.y = original_position.y;
-            }
-            // vignette_position();
+                        // vignette_position();
             update_scroll();
             if (do_emit) {
                 emit_player_data();
@@ -540,10 +587,165 @@ function run_game() {
         }
     }
 
+    function update_player_physics () {
+        do_emit = false;
+        // emulate friction
+        player_sprite.velocity_x *= player_friction_coefficient;
+        player_sprite.velocity_y *= player_friction_coefficient;
+
+        // if the player is moving emit locational data
+        if (Math.abs(player_sprite.velocity_x) >= 1 || Math.abs(player_sprite.velocity_y) >= 1) {
+            do_emit = true;
+        }
+
+        // Forms a triangle with: previous position corners , current position
+        // corners and block corners
+
+        if (do_emit) {
+            // Check for collisions with the map
+            function blkaddr(loc) {
+                // Get the floor tile :P
+                return Math.floor(loc / blocksize);
+            }
+            function signed_determinant(p0, p1, blk_corner) {
+                return (blk_corner.x - p0.x) * (p1.y - p0.y) -
+                    (blk_corner.y - p0.y) * (p1.x - p0.x);
+            }
+            // These represent the edges of the sprite
+            var
+            pleft = player_sprite.x - player_sprite.pivot.x / 2,
+            pright = player_sprite.x + player_sprite.pivot.x / 2,
+            ptop = player_sprite.y - player_sprite.pivot.y / 2,
+            pbottom = player_sprite.y + player_sprite.pivot.y / 2,
+            ppleft = player_sprite.previous_position.x - player_sprite.pivot.x / 2,
+            ppright = player_sprite.previous_position.x + player_sprite.pivot.x / 2,
+            pptop = player_sprite.previous_position.y - player_sprite.pivot.y / 2,
+            ppbottom = player_sprite.previous_position.y + player_sprite.pivot.y / 2;
+
+            var
+            bleft = blkaddr(pleft),
+            bright = blkaddr(pright),
+            btop = blkaddr(ptop),
+            bbottom = blkaddr(pbottom);
+
+            function bounce_y() {
+                player_sprite.velocity_y = (-player_sprite.velocity_y) * wall_bounce_coefficient;
+                player_sprite.position.y = player_sprite.previous_position.y;
+                player_sprite.position.x += player_sprite.velocity_x;
+            }
+            function bounce_x() {
+                player_sprite.velocity_x = (-player_sprite.velocity_x) * wall_bounce_coefficient;
+                player_sprite.position.x = player_sprite.previous_position.x;
+                player_sprite.position.y += player_sprite.velocity_y;
+            }
+            if ([!terrain[btop][bleft],
+                 !terrain[btop][bright],
+                 !terrain[bbottom][bright],
+                 !terrain[bbottom][bleft]].reduce(function (prev, curr, i, arr)
+                         {
+                             return prev + (curr ? 1 : 0);
+                         }) == 3) {
+                // Three corners are colliding, bounce back both ways
+                bounce_x(); bounce_y();
+            } else if (!terrain[btop][bleft] && !terrain[btop][bright]) {
+                // We are colliding with both top corners.
+                bounce_y();
+            } else if (!terrain[btop][bleft] && !terrain[bbottom][bleft]) {
+                // Left side is colliding completely, bounce along x
+                bounce_x();
+            } else if (!terrain[btop][bright] && !terrain[bbottom][bright]) {
+                // Right side is colliding completely, bounce along x
+                bounce_x();
+            } else if (!terrain[bbottom][bleft] && !terrain[bbottom][bright]) {
+                // Bottom side is colliding completely, bounce along y
+                bounce_y();
+            } // Now handle single corner collisions
+            else if (!terrain[btop][bleft]) {
+                // top left is intersecting a wall
+                var blk_corner = {
+                    x: (bleft * blocksize) + blocksize,
+                    y: (btop * blocksize) + blocksize
+                },
+                d = signed_determinant({ x : pleft, y: ptop },
+                                       { x : ppleft, y: pptop },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_y();
+                } else if (d < 0) {
+                    bounce_x();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[btop][bright]) {
+                // top right is intersecting a wall
+                var blk_corner = {
+                    x: (bright * blocksize),
+                    y: (btop * blocksize) + blocksize
+                },
+                d = signed_determinant({ x : pright, y: ptop },
+                                       { x : ppright, y: pptop },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_x();
+                } else if (d < 0) {
+                    bounce_y();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[bbottom][bleft]) {
+                // bottom left is intersecting a wall
+                var blk_corner = {
+                    x: (bleft * blocksize) + blocksize,
+                    y: (bbottom * blocksize)
+                },
+                d = signed_determinant({ x : pleft, y: pbottom },
+                                       { x : ppleft, y: ppbottom },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_x();
+                } else if (d < 0) {
+                    bounce_y();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[bbottom][bright]) {
+                // bottom right is intersecting a wall
+                var blk_corner = {
+                    x: (bright * blocksize),
+                    y: (bbottom * blocksize)
+                },
+                d = signed_determinant({ x : pright, y: pbottom },
+                                       { x : ppright, y: ppbottom },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_y();
+                } else if (d < 0) {
+                    bounce_x();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            } else {
+                // No collisions
+                player_sprite.previous_position.x = player_sprite.x;
+                player_sprite.previous_position.y = player_sprite.y;
+                player_sprite.position.x += player_sprite.velocity_x;
+                player_sprite.position.y += player_sprite.velocity_y;
+            }
+
+            // update rotation
+            update_player_sprite_rotation();
+
+            emit_player_data();
+        }
+    }
+
 
     function update_projectiles() {
         // See if you can refactor, this might get really slow
-        // Empirically is okay, but with many users in a map could bring 
+        // Empirically is okay, but with many users in a map could bring
         // down the DO box
         for (var user in projectiles) {
             for (var i = 0; i < projectiles[user].length; ++i){
@@ -581,6 +783,7 @@ function run_game() {
 
     function animate() {
         handle_input();
+        update_player_physics();
         update_projectiles();
         update_ui();
         requestAnimFrame( animate );
