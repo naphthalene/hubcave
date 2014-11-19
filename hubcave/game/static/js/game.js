@@ -107,10 +107,12 @@ function run_game() {
     // DECLARE PLAYER OBJECT
 
     player_sprite = new PIXI.Sprite(charTexture);
-    player_sprite.velocity_x = 0
-    player_sprite.velocity_y = 0
+    player_sprite.velocity_x = 0;
+    player_sprite.velocity_y = 0;
     player_sprite.width = blocksize / 2;
     player_sprite.height = blocksize / 2;
+    player_sprite.previous_position = {};
+
     function reset_player() {
         if(typeof hubcave_data.starting_x === 'undefined' ||
            typeof hubcave_data.starting_y === 'undefined') {
@@ -237,10 +239,11 @@ function run_game() {
     movespeed = blocksize / 20;
     var max_abs_velocity = movespeed;
     var player_friction_coefficient = 0.95;
+    var wall_bounce_coefficient = 0.3;
     var player_acceleration = 1;
     shootspeed = blocksize / 10;
     rotatespeed = Math.PI / 50;
-    edge_buffer = render_size / 3;
+    edge_buffer = render_size / 2.5;
 
     scrollArea.position.x = -(player_sprite.position.x * scrollArea.scale.x);
     scrollArea.position.y = -(player_sprite.position.y * scrollArea.scale.y);
@@ -358,17 +361,18 @@ function run_game() {
     emit_player_data();
 
     scrollArea.mousemove = function(idata) {
-        player_sprite.mouse_x = idata.originalEvent.layerX
-        player_sprite.mouse_y = idata.originalEvent.layerY
+        player_sprite.mouse_x = idata.originalEvent.layerX;
+        player_sprite.mouse_y = idata.originalEvent.layerY;
+        update_player_sprite_rotation();
     };
 
-    function update_player_sprite_rotation(sprite) {
-        var dist_x = sprite.mouse_x -
-            (sprite.getBounds().x + sprite.getBounds().width / 2);
-        var dist_y = sprite.mouse_y -
-            (sprite.getBounds().y + sprite.getBounds().height / 2);
+    function update_player_sprite_rotation() {
+        var dist_x = player_sprite.mouse_x -
+            (player_sprite.getBounds().x + player_sprite.getBounds().width / 2);
+        var dist_y = player_sprite.mouse_y -
+            (player_sprite.getBounds().y + player_sprite.getBounds().height / 2);
 
-        sprite.rotation = Math.atan2(-dist_x, dist_y);
+        player_sprite.rotation = Math.atan2(-dist_x, dist_y);
     };
 
     function shootProjectile(user, position, rotation) {
@@ -415,7 +419,7 @@ function run_game() {
 
     requestAnimFrame( animate );
 
-    function colliding_with_map(sprite){
+     function colliding_with_map(sprite){
         var right_block = Math.floor((sprite.x + sprite.pivot.x / 2) / blocksize);
         var left_block = Math.max(Math.floor((sprite.x - sprite.pivot.x / 2) / blocksize), 0);
         var below_block = Math.floor((sprite.y + sprite.pivot.x / 2) / blocksize);
@@ -429,6 +433,32 @@ function run_game() {
               terrain[below_block][left_block] &&
               terrain[above_block][right_block] &&
               terrain[above_block][left_block]);
+     }
+
+    function colliding_with_map_velocities(sprite){
+        function blkaddr(loc) {
+            // Get the floor tile :P
+            return Math.floor(loc / blocksize);
+        }
+        var
+        xleft = blkaddr(sprite.x - sprite.pivot.x / 2),
+        xright = blkaddr(sprite.x + sprite.pivot.x / 2),
+        ytop = blkaddr(sprite.y - sprite.pivot.x / 2),
+        ybottom = blkaddr(sprite.y + sprite.pivot.y / 2);
+
+        if (xleft < 0 || ytop < 0 ||
+            xright >= max_width ||
+            ybottom >= max_height) {
+            return [xleft < 0,
+                    xright  >= max_width,
+                    ytop  < 0,
+                    ybottom >= max_height];
+        } else {
+            return [terrain[ytop][xleft],
+                    terrain[ytop][xright],
+                    terrain[ybottom][xright],
+                    terrain[ybottom][xleft]];
+        }
     }
 
     function is_intersecting(r1, r2) {
@@ -558,18 +588,34 @@ function run_game() {
 
                 // handle lateral motion
                 if (kd.A.isDown() && !kd.D.isDown()) {
-                    add_player_velocity(-1,'x');
+                    if (kd.W.isDown() || kd.S.isDown()){
+                        add_player_velocity(-1 / Math.sqrt(2),'x');
+                    } else {
+                        add_player_velocity(-1,'x');
+                    }
                 }
                 else if (kd.D.isDown() && !kd.A.isDown()) {
-                    add_player_velocity(1,'x');
+                    if (kd.W.isDown() || kd.S.isDown()){
+                        add_player_velocity(1 / Math.sqrt(2),'x');
+                    } else{
+                        add_player_velocity(1,'x');
+                    }
                 }
 
                 // handle verticle motion
                 if (kd.W.isDown() && !kd.S.isDown()) {
-                    add_player_velocity(-1,'y');
+                    if (kd.A.isDown() || kd.D.isDown()){
+                        add_player_velocity(-1 / Math.sqrt(2),'y');
+                    } else {
+                        add_player_velocity(-1,'y');
+                    }
                 }
                 else if (kd.S.isDown() && !kd.W.isDown()) {
-                    add_player_velocity(1,'y');
+                    if (kd.A.isDown() || kd.D.isDown()){
+                        add_player_velocity(1 / Math.sqrt(2),'y');
+                    } else {
+                        add_player_velocity(1,'y');
+                    }
                 }
 
             } else {
@@ -585,36 +631,55 @@ function run_game() {
     }
 
     function update_player_physics () {
-      do_emit = false;
-      var original_position = {
-          x: player_sprite.x,
-          y: player_sprite.y
-      };
-      // emulate friction
-      player_sprite.velocity_x *= player_friction_coefficient
-      player_sprite.velocity_y *= player_friction_coefficient
+        do_emit = false;
+        // emulate friction
+        player_sprite.velocity_x *= player_friction_coefficient;
+        player_sprite.velocity_y *= player_friction_coefficient;
 
-      // if the player is moving emit locational data
-      if (Math.abs(player_sprite.velocity_x) >= 1 || Math.abs(player_sprite.velocity_y) >= 1) {
-        do_emit = true;
-      }
-
-      if (do_emit) {
-        // move the sprite baesd on current velocity
-        player_sprite.position.x += player_sprite.velocity_x;
-        player_sprite.position.y += player_sprite.velocity_y;
-
-        // check for collisions
-        if (colliding_with_map(player_sprite)) {
-          player_sprite.position.x = original_position.x;
-          player_sprite.position.y = original_position.y;
+        // if the player is moving emit locational data
+        if (Math.abs(player_sprite.velocity_x) >= 1 || Math.abs(player_sprite.velocity_y) >= 1) {
+            do_emit = true;
         }
 
-        // update rotation
-        update_player_sprite_rotation(player_sprite);
+        player_sprite.previous_position.x = player_sprite.x;
+        player_sprite.previous_position.y = player_sprite.y;
 
-        emit_player_data();
-      }
+        if (do_emit) {
+            // check for collisions
+            // TODO need to make walls not sticky here.
+            // if we hit a wall on the left or right, annullate the x velocity.
+            // if we hit a wall on the top or bottom, annullate the y velocity.
+            var tl, tr, br, bl = colliding_with_map_velocities(player_sprite);
+            if (tl || tr) {
+                console.log("Player collided with top left");
+                player_sprite.position.x = original_position.x;
+                player_sprite.velocity_x = (-player_sprite.velocity_x) *
+            }
+            if (tr) {
+                console.log("Player collided with top right");
+                player_sprite.position.y = original_position.y;
+                player_sprite.velocity_y = 0;
+            }
+            if (br) {
+                console.log("Player collided with bottom right");
+                player_sprite.position.y = original_position.y;
+                player_sprite.velocity_y = 0;
+            }
+            if (bl) {
+                console.log("Player collided with bottom left");
+                player_sprite.position.y = original_position.y;
+                player_sprite.velocity_y = 0;
+            }
+
+            // move the sprite based on current velocity
+            player_sprite.position.x += player_sprite.velocity_x;
+            player_sprite.position.y += player_sprite.velocity_y;
+
+            // update rotation
+            update_player_sprite_rotation();
+
+            emit_player_data();
+        }
     }
 
 
