@@ -208,23 +208,6 @@ function run_game() {
         console.log(idata.originalEvent.layerX, idata.originalEvent.layerY);
     };
 
-    // var ui_panel = new PIXI.DisplayObjectContainer();
-    // ui_panel.position.x = 15;
-    // ui_panel.position.y = 15;
-    // ui_panel.width = render_size - 15;
-    // ui_panel.height = blocksize - 15;
-    // ui_panel.interactive = true;
-    // ui_panel.alpha = 0.5;
-
-    // ui_panel.buttonMode = true;
-    // ui.addChild(ui_panel);
-
-    // hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
-    //                                   { fill: 'white' });
-
-    // ui_panel.addChild(hitpoints_counter);
-    // stage.addChild(ui);
-
     function update_ui(){
         if (ui_show){
             // ui.removeChild(hitpoints_counter);
@@ -239,7 +222,7 @@ function run_game() {
     movespeed = blocksize / 20;
     var max_abs_velocity = movespeed;
     var player_friction_coefficient = 0.95;
-    var wall_bounce_coefficient = 0.3;
+    var wall_bounce_coefficient = 0.02;
     var player_acceleration = 1;
     shootspeed = blocksize / 10;
     rotatespeed = Math.PI / 50;
@@ -435,32 +418,6 @@ function run_game() {
               terrain[above_block][left_block]);
      }
 
-    function colliding_with_map_velocities(sprite){
-        function blkaddr(loc) {
-            // Get the floor tile :P
-            return Math.floor(loc / blocksize);
-        }
-        var
-        xleft = blkaddr(sprite.x - sprite.pivot.x / 2),
-        xright = blkaddr(sprite.x + sprite.pivot.x / 2),
-        ytop = blkaddr(sprite.y - sprite.pivot.x / 2),
-        ybottom = blkaddr(sprite.y + sprite.pivot.y / 2);
-
-        if (xleft < 0 || ytop < 0 ||
-            xright >= max_width ||
-            ybottom >= max_height) {
-            return [xleft < 0,
-                    xright  >= max_width,
-                    ytop  < 0,
-                    ybottom >= max_height];
-        } else {
-            return [terrain[ytop][xleft],
-                    terrain[ytop][xright],
-                    terrain[ybottom][xright],
-                    terrain[ybottom][xleft]];
-        }
-    }
-
     function is_intersecting(r1, r2) {
         return !(r2.x > (r1.x + r1.width)  ||
                  (r2.x + r2.width ) < r1.x ||
@@ -562,15 +519,15 @@ function run_game() {
 
     // adds velocity to player sprite for x or y within max_abs_velocity bounds
     function add_player_velocity(velo_delta, direction) {
-      if (direction == 'x') {
-        if (Math.abs(player_sprite.velocity_x) <= max_abs_velocity) {
-          player_sprite.velocity_x += (velo_delta * player_acceleration);
+        if (direction == 'x') {
+            if (Math.abs(player_sprite.velocity_x) <= max_abs_velocity) {
+                player_sprite.velocity_x += (velo_delta * player_acceleration);
+            }
+        } else if (direction == 'y') {
+            if (Math.abs(player_sprite.velocity_y) <= max_abs_velocity) {
+                player_sprite.velocity_y += (velo_delta * player_acceleration);
+            }
         }
-      } else if (direction == 'y') {
-        if (Math.abs(player_sprite.velocity_y) <= max_abs_velocity) {
-          player_sprite.velocity_y += (velo_delta * player_acceleration);
-        }
-      }
     }
 
     function handle_input() {
@@ -641,39 +598,142 @@ function run_game() {
             do_emit = true;
         }
 
-        player_sprite.previous_position.x = player_sprite.x;
-        player_sprite.previous_position.y = player_sprite.y;
+        // Forms a triangle with: previous position corners , current position
+        // corners and block corners
 
         if (do_emit) {
-            // check for collisions
-            // TODO need to make walls not sticky here.
-            // if we hit a wall on the left or right, annullate the x velocity.
-            // if we hit a wall on the top or bottom, annullate the y velocity.
-            var tl, tr, br, bl = colliding_with_map_velocities(player_sprite);
-            if (tl || tr) {
-                console.log("Player collided with top left");
-                player_sprite.position.x = original_position.x;
-                player_sprite.velocity_x = (-player_sprite.velocity_x) *
+            // Check for collisions with the map
+            function blkaddr(loc) {
+                // Get the floor tile :P
+                return Math.floor(loc / blocksize);
             }
-            if (tr) {
-                console.log("Player collided with top right");
-                player_sprite.position.y = original_position.y;
-                player_sprite.velocity_y = 0;
+            function signed_determinant(p0, p1, blk_corner) {
+                return (blk_corner.x - p0.x) * (p1.y - p0.y) -
+                    (blk_corner.y - p0.y) * (p1.x - p0.x);
             }
-            if (br) {
-                console.log("Player collided with bottom right");
-                player_sprite.position.y = original_position.y;
-                player_sprite.velocity_y = 0;
-            }
-            if (bl) {
-                console.log("Player collided with bottom left");
-                player_sprite.position.y = original_position.y;
-                player_sprite.velocity_y = 0;
-            }
+            // These represent the edges of the sprite
+            var
+            pleft = player_sprite.x - player_sprite.pivot.x / 2,
+            pright = player_sprite.x + player_sprite.pivot.x / 2,
+            ptop = player_sprite.y - player_sprite.pivot.y / 2,
+            pbottom = player_sprite.y + player_sprite.pivot.y / 2,
+            ppleft = player_sprite.previous_position.x - player_sprite.pivot.x / 2,
+            ppright = player_sprite.previous_position.x + player_sprite.pivot.x / 2,
+            pptop = player_sprite.previous_position.y - player_sprite.pivot.y / 2,
+            ppbottom = player_sprite.previous_position.y + player_sprite.pivot.y / 2;
 
-            // move the sprite based on current velocity
-            player_sprite.position.x += player_sprite.velocity_x;
-            player_sprite.position.y += player_sprite.velocity_y;
+            var
+            bleft = blkaddr(pleft),
+            bright = blkaddr(pright),
+            btop = blkaddr(ptop),
+            bbottom = blkaddr(pbottom);
+
+            function bounce_y() {
+                player_sprite.velocity_y = (-player_sprite.velocity_y) * wall_bounce_coefficient;
+                player_sprite.position.y = player_sprite.previous_position.y;
+                player_sprite.position.x += player_sprite.velocity_x;
+            }
+            function bounce_x() {
+                player_sprite.velocity_x = (-player_sprite.velocity_x) * wall_bounce_coefficient;
+                player_sprite.position.x = player_sprite.previous_position.x;
+                player_sprite.position.y += player_sprite.velocity_y;
+            }
+            if ([!terrain[btop][bleft],
+                 !terrain[btop][bright],
+                 !terrain[bbottom][bright],
+                 !terrain[bbottom][bleft]].reduce(function (prev, curr, i, arr)
+                         {
+                             return prev + (curr ? 1 : 0);
+                         }) == 3) {
+                // Three corners are colliding, bounce back both ways
+                bounce_x(); bounce_y();
+            } else if (!terrain[btop][bleft] && !terrain[btop][bright]) {
+                // We are colliding with both top corners.
+                bounce_y();
+            } else if (!terrain[btop][bleft] && !terrain[bbottom][bleft]) {
+                // Left side is colliding completely, bounce along x
+                bounce_x();
+            } else if (!terrain[btop][bright] && !terrain[bbottom][bright]) {
+                // Right side is colliding completely, bounce along x
+                bounce_x();
+            } else if (!terrain[bbottom][bleft] && !terrain[bbottom][bright]) {
+                // Bottom side is colliding completely, bounce along y
+                bounce_y();
+            } // Now handle single corner collisions
+            else if (!terrain[btop][bleft]) {
+                // top left is intersecting a wall
+                var blk_corner = {
+                    x: (bleft * blocksize) + blocksize,
+                    y: (btop * blocksize) + blocksize
+                },
+                d = signed_determinant({ x : pleft, y: ptop },
+                                       { x : ppleft, y: pptop },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_y();
+                } else if (d < 0) {
+                    bounce_x();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[btop][bright]) {
+                // top right is intersecting a wall
+                var blk_corner = {
+                    x: (bright * blocksize),
+                    y: (btop * blocksize) + blocksize
+                },
+                d = signed_determinant({ x : pright, y: ptop },
+                                       { x : ppright, y: pptop },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_x();
+                } else if (d < 0) {
+                    bounce_y();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[bbottom][bleft]) {
+                // bottom left is intersecting a wall
+                var blk_corner = {
+                    x: (bleft * blocksize) + blocksize,
+                    y: (bbottom * blocksize)
+                },
+                d = signed_determinant({ x : pleft, y: pbottom },
+                                       { x : ppleft, y: ppbottom },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_x();
+                } else if (d < 0) {
+                    bounce_y();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[bbottom][bright]) {
+                // bottom right is intersecting a wall
+                var blk_corner = {
+                    x: (bright * blocksize),
+                    y: (bbottom * blocksize)
+                },
+                d = signed_determinant({ x : pright, y: pbottom },
+                                       { x : ppright, y: ppbottom },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_y();
+                } else if (d < 0) {
+                    bounce_x();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            } else {
+                // No collisions
+                player_sprite.previous_position.x = player_sprite.x;
+                player_sprite.previous_position.y = player_sprite.y;
+                player_sprite.position.x += player_sprite.velocity_x;
+                player_sprite.position.y += player_sprite.velocity_y;
+            }
 
             // update rotation
             update_player_sprite_rotation();
