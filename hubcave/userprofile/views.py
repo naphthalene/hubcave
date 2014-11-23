@@ -19,9 +19,5 @@ class ProfileDetail(DetailView):
         # Call the base implementation first to get a context
         context = super(ProfileDetail, self).get_context_data(**kwargs)
         context['users_games'] = Game.objects.filter(user=self.object)
-        try:
-            profile = UserProfile.objects.get(user=self.object)
-            # Add profile info to the context
-        except UserProfile.DoesNotExist:
-            pass
+        profile = UserProfile.objects.get_or_create(user=self.object)
         return context

@@ -1,11 +1,14 @@
+from math import floor
 from json import dumps, loads
 from github import Github
+from random import random
 from datetime import datetime
 from django.db import models
 from django.contrib.auth.models import User
 
 import itertools
 
+from hubcave.userprofile.models import UserProfile
 from hubcave.core.mixins.models import TrackingFields
 from hubcave.game.mazes import min_cost_spanning_tree
 from hubcave.game.random_walk import random_walk
@@ -19,39 +22,25 @@ class Game(models.Model):
     starting_x = models.IntegerField(null=True)
     starting_y = models.IntegerField(null=True)
     map_type = models.CharField(max_length=255, default="maze")
-    size = models.IntegerField(null=True)
-    commits = models.IntegerField(null=True)
-    points_spent = models.IntegerField(default=0)
+    updated = models.DateTimeField(default=datetime.now, blank=True)
     # Whether the repo has been deleted on GitHub, not in the game.
     repository_deleted = models.BooleanField(default=False)
 
     def __unicode__(self):
         return "{}/{}".format(self.user, self.repository)
 
-    ## TODO move this to user profile?
     @property
     def token(self):
         return self.user.social_auth.get(provider='github').extra_data['access_token']
 
-    # def update_repo_magnitude(self, since_update=False):
-    #     """
-    #     Query github API for data necessary to build map. Update the
-    #     object instance with size and commits
-    #     """
+    def api_repo(self):
+        """
+        Query github API for data necessary to build map. Update the
+        object instance with size and commits
+        """
 
-    #     if self.repository is None:
-    #         g = Github(self.token)
-    #         repo = g.get_user().get_repo(self.repository)
-
-    #     self.size = self.repo.size
-    #     if since_update:
-    #         self.commits_since \
-    #             = self.repo.get_commits(since=self.date_updated)
-    #     self.commits = repo.get_commits()
-
-        # We will tokenize the readme to gather some strings to be
-        # used inside the map terrain
-        # readme = repo.get_readme()
+        g = Github(self.token)
+        return g.get_user().get_repo(self.repository)
 
     def generate_or_update_map(self):
         if self.map_data is None:
@@ -60,11 +49,15 @@ class Game(models.Model):
             self.update_map()
 
     def update_map(self):
-        """
-        """
-        # self.update_repo_magnitude()
-        # print self.commits_since.totalCount
-        pass
+        repo = self.api_repo()
+
+        commits = repo.get_commits(since=self.updated)
+        self.updated = datetime.now()
+        self.save()
+
+        for c in commits:
+            i = Item.objects.get(kind='gold')
+            self.drop_item(i)
 
     def generate_map(self):
         """
@@ -100,6 +93,38 @@ class Game(models.Model):
         gmap.ParseFromString(self.map_data)
         return protobuf_to_dict(gmap)
 
+    def points_dict(self):
+        ret = {}
+        max_x = max_y = 0
+        d = self.map_dict()
+        for b in d['blockdata']:
+            if b['x'] not in ret:
+                ret[b['x']] = {}
+            ret[b['x']][b['y']] = b['blktype']
+            if b['x'] > max_x:
+                max_x = b['x']
+            if b['y'] > max_y:
+                max_y = b['y']
+
+        return (ret, max_x, max_y)
+
+    def drop_item(self, item, item_location=None):
+        """
+        Drop an item onto the map, either at a random or specified
+        location
+        """
+        if not item_location:
+            d, max_x, max_y = self.points_dict()
+            while True:
+                item_location = (floor(random()*max_x),
+                                 floor(random()*max_y))
+                if d[item_location[0]][item_location[1]]:
+                    break
+
+        return MapItem.objects.create(game=self,
+                                      item=item,
+                                      x=item_location[0],
+                                      y=item_location[1])
 
 class Player(models.Model):
     user = models.ForeignKey(User)
@@ -113,3 +138,29 @@ class Message(models.Model):
     game = models.ForeignKey(Game, related_name="messages")
     text = models.TextField()
     when = models.DateTimeField(auto_now_add=True)
+
+
+class Inventory(models.Model):
+    user = models.ForeignKey(User)
+
+class Item(models.Model):
+    TEXTURE_LOCATION = '/static/img/items/'
+    """
+    Information (where to get texture, id and effects)
+    """
+    kind = models.CharField(max_length=256)
+    texture = models.CharField(max_length=256)
+
+    @property
+    def texture_location(self):
+        return Item.TEXTURE_LOCATION + self.texture + ".png"
+
+class InventoryItem(models.Model):
+    inventory = models.ForeignKey(Inventory, related_name="items")
+    item = models.ForeignKey(Item, related_name="i_instances")
+
+class MapItem(models.Model):
+    game = models.ForeignKey(Game, related_name="items")
+    item = models.ForeignKey(Item, related_name="m_instances")
+    x = models.FloatField()
+    y = models.FloatField()

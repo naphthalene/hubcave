@@ -1,32 +1,33 @@
 // HUBCAVE
-// window.onbeforeunload = function (e) {
-//   return "Quit game?";
-// };
 
 // Disable the chat window initially
 $('#chat_input').width($('.chat-panel').width() - 50);
 
-socket = io.connect("/game", {
-                        transports: ['websocket',
-                                     'flashsocket',
-                                     'polling']
-                    });
+var socket = io.connect("/game", {
+                            transports: ['websocket',
+                                         'flashsocket',
+                                         'polling']
+                        });
 socket.on('connect', function () {
               socket.emit('join', [game_id, user_id]);
           });
 
+var loaded = false;
 socket.on('loading', function (data) {
-              hubcave_data = data.map;
-              for (var i = data.messages.length - 1; i >= 0; --i){
-                  var msg = data.messages[i];
-                  $("#room_chat ul").prepend(
-                      '<li>[' + msg.when + '] ' +
-                          '<a href=/profile/' + msg.user_id + '>' +
-                          msg.user_name + ' </a><span> ' +
-                          msg.text + ' </span>' +
-                          '</li>');
+              if (!loaded) {
+                  hubcave_data = data.map;
+                  for (var i = data.messages.length - 1; i >= 0; --i){
+                      var msg = data.messages[i];
+                      $("#room_chat ul").prepend(
+                          '<li>[' + msg.when + '] ' +
+                              '<a href=/profile/' + msg.user_id + '>' +
+                              msg.user_name + ' </a><span> ' +
+                              msg.text + ' </span>' +
+                              '</li>');
+                  }
+                  loaded = true;
+                  run_game();
               }
-              run_game();
           });
 
 function run_game() {
@@ -36,20 +37,16 @@ function run_game() {
     var render_size = Math.min($('#game_panel').width() - 50,
                                $('#game_panel').width());
 
-
     var renderer = PIXI.autoDetectRenderer(render_size,
                                            render_size);
 
-
+    // Define textures
     var wallTexture = PIXI.Texture.fromImage("/static/img/wall.png");
     var floorTexture = PIXI.Texture.fromImage("/static/img/floortile.png");
     var projectileTexture = PIXI.Texture.fromImage("/static/img/arrow.png");
+    var blankItemTexture = PIXI.Texture.fromImage("/static/img/items/blank.png");
     var charTexture = PIXI.Texture.fromImage("/static/img/ghlogo.png");
     var vignetteTexture = PIXI.Texture.fromImage("/static/img/vignette.png");
-
-    for (i=0; i < hubcave_data.blockdata.length; ++i) {
-        var block = hubcave_data.blockdata[i];
-    }
 
     // PIXI.Texture.addTextureToCache(wallTexture, 'walltex');
     var blocksize = 50;
@@ -98,14 +95,21 @@ function run_game() {
     scrollArea.scale.y = scrollArea.scale.x;
 
     users = {};
+    map_items = {};
 
     // Bow is default item at '1'
     // Items/keys -> map 2-0 keys to select
     // HP/ammo
 
+    // DECLARE PLAYER OBJECT
+
     player_sprite = new PIXI.Sprite(charTexture);
+    player_sprite.velocity_x = 0;
+    player_sprite.velocity_y = 0;
     player_sprite.width = blocksize / 2;
     player_sprite.height = blocksize / 2;
+    player_sprite.previous_position = {};
+
     function reset_player() {
         if(typeof hubcave_data.starting_x === 'undefined' ||
            typeof hubcave_data.starting_y === 'undefined') {
@@ -119,7 +123,6 @@ function run_game() {
         }
         player_hp = 100;
         player_ammo = 500;
-        player_items = {};
     }; reset_player();
 
     player_sprite.pivot.x = player_sprite.width;
@@ -127,7 +130,7 @@ function run_game() {
 
     var nick = new PIXI.Text(user_name,
                              {
-                                 font: 'bold 12px Arial'
+                                 font: 'bold 9px Arial'
                              });
     player_sprite.addChild(nick);
 
@@ -140,7 +143,7 @@ function run_game() {
     // Add ui overlay
     ui_show = true;
 
-    ui = new PIXI.DisplayObjectContainer();
+    var ui = new PIXI.DisplayObjectContainer();
     ui.position.x = 0;
     ui.position.y = 0;
     ui.width = render_size;
@@ -149,30 +152,108 @@ function run_game() {
     ui.buttonMode = true;
     stage.addChild(ui);
 
-    uigfx = new PIXI.Graphics();
+    hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
+                                      { fill: 'white',
+                                        font: 'bold 13px Arial' });
 
-    ui.addChild(uigfx);
+    hitpoints_counter.x = 15;
+    hitpoints_counter.y = 3;
+    ui.addChild(hitpoints_counter);
 
-    uigfx.beginFill(0xFFFFFF, 0.8);
-    uigfx.drawRect(5,5, render_size - 10, 60);
-    uigfx.endFill();
+    ammo_counter = new PIXI.Text("Arrows: " + player_ammo.toString(),
+                                      { fill: 'white' ,
+                                        font: 'bold 13px Arial'});
+    ammo_counter.x = 30 + hitpoints_counter.width;
+    ammo_counter.y = 3;
 
-    inventory = new PIXI.DisplayObjectContainer();
+    ui.addChild(ammo_counter);
+
+    gold_counter = new PIXI.Text("Gold: " + player_gold.toString(),
+                                      { fill: 'white' ,
+                                        font: 'bold 13px Arial'});
+    gold_counter.x = 15;
+    gold_counter.y = hitpoints_counter.height + 8;
+
+    ui.addChild(gold_counter);
+
+    var inventory_container = new PIXI.DisplayObjectContainer();
     // Initial offsets from the left and top
-    inventory.position.x = 15;
-    inventory.position.y = 3;
+    inventory_container.position.x = ammo_counter.width + ammo_counter.x + 15;
+    inventory_container.position.y = 3;
+    inventory_container.width = ui._width;
+    inventory_container.height = ui._height;
 
-    ui.addChild(inventory);
+    var gfx = new PIXI.Graphics();
 
+    inventory_container.addChild(gfx);
+    inventory_container.gfx = gfx;
+
+    ui.addChild(inventory_container);
+
+    // inventory_container.addChild(new PIXI.Sprite(wallTexture));
     // This should be set by the server over the socket on 'loading'
     // This is a list of Items defined above (at most 9 here)
-    function Inventory (items) {
+    function Inventory (items, container) {
         this.items = items;
+        this.padding = 0.1;
+        this.container = container;
+        this.container.gfx.clearActive = function() {
+            this.clear();
+            this.beginFill(0xFFFFFF, 0.8);
+            this.drawRect(0, 0, this.parent.width, this.parent.height + 10);
+            this.endFill();
+        };
+        this.update();
+        this.container.gfx.clearActive();
+        for (var i=0,offset=this.padding; i<9; ++i) {
+            var index_text = new PIXI.Text((i + 1).toString(),
+                                           {
+                                               font: '9px Arial'
+                                           });
+            index_text.position.x = offset;
+            index_text.position.y = this.padding * this.sprite_size;
+            this.container.addChild(index_text);
+            offset += ((2 * this.padding) + this.sprite_size);
+            // Can't use keydrown for this....
+            document.addEventListener(
+                'keyup',
+                function(inv, index) {
+                    return function(evt) {
+                        if (evt.keyCode == (index + 49)){
+                            var previously_active = inv.active_item;
+                            try {
+                                inv.setActive(inv.items[index]);
+                            } catch (x) {
+                                inv.setActive(previously_active);
+                                console.log('Tried to access item that does not exist');
+                            }
+                        }
+                    }; }(this, i));
+        }
     }
+    // People you follow's activity will be shown in a live updating feed on the dashboard.
+    // Need to reorganize the dash, make it better for mobile
+
+    // ---
+    // Each slot is assigned an item
+    //
+    Inventory.prototype.setActive = function(item) {
+        this.container.gfx.clearActive();
+        this.active_item = item;
+        this.container.gfx.beginFill(0x0, 0.2);
+        this.container.gfx.lineStyle(2, 0xBB0000);
+        var s = item.getSprite();
+        this.container.gfx.drawRect(
+            s.position.x, s.position.y,
+            s._width, s._height);
+        this.container.gfx.endFill();
+    };
 
     Inventory.prototype.addItem = function(item) {
         if (this.items.length < 9){
             this.items.push(item);
+            this.update();
+            this.setActive(item);
             return true;
         } else {
             return false;
@@ -181,92 +262,169 @@ function run_game() {
 
     Inventory.prototype.popItem = function(item) {
         this.items.pop(item);
+        this.update();
     };
 
-    inventory_items = new Inventory([]);
-
-    function Item(type) {
-        this.type = type;
-    }
-
-    function InventoryItem(type) {
-        Item.apply(this, [type]);
-    }
-    // Define prototype functions for inventory items
-
-    // Define our items
-    // Location is 2D vector
-    function MapItem (type, location) {
-        Item.apply(this, [type]);
-        this.sprite.location = location;
-        this.sprite.pivot.x = this.sprite.width;
-        this.sprite.pivot.y = this.sprite.height;
-        // Add a random rotation, why not
-        // Inheriting classes can override this anyway
-        this.sprite.rotation = Math.random() * Math.pi * 2;
-    }
-    MapItem.prototype.collect = function () {
-        // No op by default
-        console.log("Collected item " + this.type);
+    Inventory.prototype.update = function() {
+        // Get the bounds of the container
+        // Space out evenly, the number of items in the list
+        var cell_size = this.container._height;
+        // Handle selected item (draw bounding box)
+        // each item container has a padding from each side proportional
+        // to the item container width. The rectangle formed by this
+        // inside padding is what the scale of the item sprite should
+        // be. Could be able to achieve this by setting widths
+        this.sprite_size = cell_size -
+            (2 * this.padding * cell_size);
+        // For each item
+        for (var i=0,offset=this.padding; i<9; ++i){
+            if (i > this.items.length - 1){
+                var s = new PIXI.Sprite(blankItemTexture);
+                s.width = this.sprite_size;
+                s.height = this.sprite_size;
+                s.position.x = offset;
+                s.position.y = this.padding * this.sprite_size;
+                this.container.addChild(s);
+            } else {
+                var item = this.items[i];
+                if (!(typeof item === "undefined")) {
+                    var s = item.getSprite();
+                    s.width = this.sprite_size;
+                    s.height = this.sprite_size;
+                    s.position.x = offset;
+                    s.position.y = this.padding * this.sprite_size;
+                    this.container.addChild(s);
+                }
+            }
+            offset += ((2 * this.padding) + this.sprite_size);
+        }
     };
 
-    function Item__Gold(location, opts){
-        MapItem.apply(this, ['item__gold', location]);
-    }
-    Item__Gold.prototype.sprite = PIXI.Texture.fromImage("/static/img/items/gold.png");
+    var extend = augment.extend;
 
-    function Item__Arrow(location, opts){
-        MapItem.apply(this, ['item__arrow', location]);
-    }
-    Item__Arrow.prototype.sprite = projectileTexture;
+    var Item = augment(
+        Object,
+        function () {
+            this.getSprite = function () {
+                if (typeof this.sprite === 'undefined') {
+                    this.sprite = new PIXI.Sprite(this.texture);
+                }
+                return this.sprite;
+            };
+            this.InventoryItem = extend(
+                this,
+                {
+                    constructor: function(type, textureloc) {
+                        this.type = type;
+                        this.texture = PIXI.Texture.fromImage(textureloc);
+                        this.getSprite();
+                        this.sprite.interactive = true;
+                        this.sprite.buttonMode = true;
+                        this.sprite.mousedown = function(item) {
+                            return function(idata) {
+                                inventory.setActive(item);
+                            }; }(this);
+                    }
+                });
+            this.MapItem = extend(
+                this,
+                {
+                    constructor: function(id, type, x, y, textureloc) {
+                        this.id = id;
+                        this.type = type;
+                        this.texture = PIXI.Texture.fromImage(textureloc);
+                        var s = this.getSprite();
+                        s.position.x = x;
+                        s.position.y = y;
+                        s.width = blocksize / 5;
+                        s.height = blocksize / 5;
+                        // s.pivot.x = s._width;
+                        // s.pivot.y = s._height;
+                        // Add a random rotation, why not
+                        // Inheriting classes can override this anyway
+                        // s.rotation = Math.random() * Math.pi * 2;
+                        scrollArea.addChild(s);
+                    },
+                    collect: function () {
+                        // This needs to be verified
+                        console.log("Collected item " + this.type);
+                        socket.emit('collect', {
+                                        data: {
+                                            user: user_id,
+                                            id: this.id
+                                        }
+                                    });
+                    }
+                });
+        });
 
-    function Item__Bow(opts){
-        InventoryItem.apply(this, ['item__bow']);
-    }
-    Item__Bow.prototype.sprite = PIXI.Texture.fromImage("/static/img/items/bow.png");
+    socket.on('collect_ok' ,function (data) {
+                  var item = map_items[data.data.id];
+                  scrollArea.removeChild(item.sprite);
+                  delete map_items[data.data.id];
+              });
 
+    // Populate inventory using socket data
+    var inventory = new Inventory([], inventory_container);
     // For now, start off with just a bow
-    inventory_items.addItem(new Item__Bow());
-    console.log(inventory_items);
+    // inventory.addItem(new Item__Bow());
 
-    // Draw the inventory boxes/items. May be able to use the item sprites
+    socket.on('inventory_add', function (data) {
+                  for (var i=0; i < data.items.length; ++i) {
+                      var item_data = data.items[i];
+                      var item = new Item.InventoryItem(item_data.type,
+                                                        item_data.texture);
+                      inventory.addItem(item);
+                  }});
+    // inventory.addItem(new Item.InventoryItem('gold', '/static/img/items/gold.png'));
 
-    hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
-                                      { fill: 'white',
-                                        font: 'bold 13px Arial' });
+    socket.on('map_item_add', function (data) {
+                  for (var i=0; i < data.items.length; ++i) {
+                      var item_data = data.items[i],
+                          item = new Item.MapItem(item_data.id,
+                                                  item_data.type,
+                                                  item_data.y * blocksize + Math.random() * blocksize,
+                                                  item_data.x * blocksize + Math.random() * blocksize,
+                                                  item_data.texture);
+                      // console.log("** New Map Item : " + item_data.type, item.sprite);
+                      map_items[item.id] = item;
+                  }});
 
-    hitpoints_counter.x = 15;
-    hitpoints_counter.y = 65;
-    ui.addChild(hitpoints_counter);
+    socket.on('collected_item', function (data) {
+                  console.log(data.data.user + " collected " + data.data.id);
+                  var item = map_items[data.data.id];
+                  scrollArea.removeChild(item.getSprite());
+                  delete map_items[data.data.id];
+              });
 
-    ammo_counter = new PIXI.Text("Ammo: " + player_ammo.toString(),
-                                      { fill: 'white' ,
-                                        font: 'bold 13px Arial'});
-    ammo_counter.x = 30 + hitpoints_counter.width;
-    ammo_counter.y = 65;
-
-    ui.addChild(ammo_counter);
+    socket.on('add_gold', function(amount) {
+                  console.log("Got some gold:", amount);
+                  player_gold += amount;
+              });
 
     function update_ui(){
         if (ui_show){
-            // The width of each item in the inventory is 50px
-            // Put a 2px margin between each item as well
-            // Update the inventory
             hitpoints_counter.setText("HP: " + player_hp.toString());
-            ammo_counter.setText("Ammo: " + player_ammo.toString());
+            ammo_counter.setText("Arrows: " + player_ammo.toString());
+            gold_counter.setText("Gold: " + player_gold.toString());
         }
     }
 
     update_ui();
-
-    ui.mousedown = function(idata) {
-        console.log(idata.originalEvent.layerX, idata.originalEvent.layerY);
-    };
+    socket.on('profile', function(data) {
+                  player_hp = data.hp;
+                  player_gold = data.gold;
+                  update_ui();
+              });
 
     movespeed = blocksize / 20;
+    var max_abs_velocity = movespeed;
+    var player_friction_coefficient = 0.95;
+    var wall_bounce_coefficient = 0;
+    var player_acceleration = 1;
     shootspeed = blocksize / 10;
     rotatespeed = Math.PI / 50;
-    edge_buffer = render_size / 3;
+    edge_buffer = render_size / 2.5;
 
     scrollArea.position.x = -(player_sprite.position.x * scrollArea.scale.x);
     scrollArea.position.y = -(player_sprite.position.y * scrollArea.scale.y);
@@ -384,12 +542,18 @@ function run_game() {
     emit_player_data();
 
     scrollArea.mousemove = function(idata) {
-        var dist_x = idata.originalEvent.layerX -
+        player_sprite.mouse_x = idata.originalEvent.layerX;
+        player_sprite.mouse_y = idata.originalEvent.layerY;
+        update_player_sprite_rotation();
+    };
+
+    function update_player_sprite_rotation() {
+        var dist_x = player_sprite.mouse_x -
             (player_sprite.getBounds().x + player_sprite.getBounds().width / 2);
-        var dist_y = idata.originalEvent.layerY -
+        var dist_y = player_sprite.mouse_y -
             (player_sprite.getBounds().y + player_sprite.getBounds().height / 2);
+
         player_sprite.rotation = Math.atan2(-dist_x, dist_y);
-        // emit_player_data();
     };
 
     function shootProjectile(user, position, rotation) {
@@ -436,20 +600,21 @@ function run_game() {
 
     requestAnimFrame( animate );
 
-    function colliding_with_map(sprite){
+     function colliding_with_map(sprite){
         var right_block = Math.floor((sprite.x + sprite.pivot.x / 2) / blocksize);
         var left_block = Math.max(Math.floor((sprite.x - sprite.pivot.x / 2) / blocksize), 0);
         var below_block = Math.floor((sprite.y + sprite.pivot.x / 2) / blocksize);
         var above_block = Math.max(Math.floor((sprite.y - sprite.pivot.x / 2) / blocksize), 0);
 
-        return (above_block < 0 | left_block < 0 |
-                below_block >= max_width |
+
+        return (above_block < 0 || left_block < 0 ||
+                below_block >= max_width ||
                 right_block >= max_width) ||
-            !(terrain[below_block][right_block] &
-              terrain[below_block][left_block] &
-              terrain[above_block][right_block] &
+            !(terrain[below_block][right_block] &&
+              terrain[below_block][left_block] &&
+              terrain[above_block][right_block] &&
               terrain[above_block][left_block]);
-    }
+     }
 
     function is_intersecting(r1, r2) {
         return !(r2.x > (r1.x + r1.width)  ||
@@ -550,14 +715,26 @@ function run_game() {
                     }
             });
 
+    // adds velocity to player sprite for x or y within max_abs_velocity bounds
+    function add_player_velocity(velo_delta, direction) {
+        if (direction == 'x') {
+            var new_velocity = player_sprite.velocity_x + (velo_delta * player_acceleration);
+            if (Math.abs(new_velocity) <= max_abs_velocity) {
+                player_sprite.velocity_x = new_velocity;
+            }
+        } else if (direction == 'y') {
+            var new_velocity = player_sprite.velocity_y + (velo_delta * player_acceleration);
+            if (Math.abs(new_velocity) <= max_abs_velocity) {
+                player_sprite.velocity_y = new_velocity;
+            }
+        }
+    }
+
     function handle_input() {
         if (!typing) {
-            var original_position = {
-                x: player_sprite.x,
-                y: player_sprite.y
-            };
             var do_emit = true;
             if (!typing){
+
                 // Keyboard rotation handling
                 if (kd.RIGHT.isDown()) {
                     player_sprite.rotation += rotatespeed;
@@ -565,34 +742,209 @@ function run_game() {
                 else if (kd.LEFT.isDown()) {
                     player_sprite.rotation -= rotatespeed;
                 }
-                // Movement handling
-                if (kd.A.isDown()) {
-                    player_sprite.position.x -= movespeed;
+
+                // handle lateral motion
+                if (kd.A.isDown() && !kd.D.isDown()) {
+                    if (kd.W.isDown() || kd.S.isDown()){
+                        add_player_velocity(-1 / Math.sqrt(2),'x');
+                    } else {
+                        add_player_velocity(-1,'x');
+                    }
                 }
-                else if (kd.D.isDown()) {
-                    player_sprite.position.x += movespeed;
+                else if (kd.D.isDown() && !kd.A.isDown()) {
+                    if (kd.W.isDown() || kd.S.isDown()){
+                        add_player_velocity(1 / Math.sqrt(2),'x');
+                    } else{
+                        add_player_velocity(1,'x');
+                    }
                 }
-                else if (kd.W.isDown()) {
-                    player_sprite.position.y -= movespeed;
+
+                // handle verticle motion
+                if (kd.W.isDown() && !kd.S.isDown()) {
+                    if (kd.A.isDown() || kd.D.isDown()){
+                        add_player_velocity(-1 / Math.sqrt(2),'y');
+                    } else {
+                        add_player_velocity(-1,'y');
+                    }
                 }
-                else if (kd.S.isDown()) {
-                    player_sprite.position.y += movespeed;
+                else if (kd.S.isDown() && !kd.W.isDown()) {
+                    if (kd.A.isDown() || kd.D.isDown()){
+                        add_player_velocity(1 / Math.sqrt(2),'y');
+                    } else {
+                        add_player_velocity(1,'y');
+                    }
                 }
-                else {
-                    do_emit = false;
-                }
+
             } else {
                 do_emit = false;
             }
 
-            if (colliding_with_map(player_sprite)) {
-                player_sprite.position.x = original_position.x;
-                player_sprite.position.y = original_position.y;
-            }
-            // vignette_position();
+                        // vignette_position();
             update_scroll();
             if (do_emit) {
                 emit_player_data();
+            }
+        }
+    }
+
+    function update_player_physics () {
+        do_emit = false;
+        // emulate friction
+        player_sprite.velocity_x *= player_friction_coefficient;
+        player_sprite.velocity_y *= player_friction_coefficient;
+
+        // if the player is moving emit locational data
+        if (Math.abs(player_sprite.velocity_x) >= 1 || Math.abs(player_sprite.velocity_y) >= 1) {
+            do_emit = true;
+        }
+
+        // Forms a triangle with: previous position corners , current position
+        // corners and block corners
+
+        if (do_emit) {
+            // Check for collisions with the map
+            function blkaddr(loc) {
+                // Get the floor tile :P
+                return Math.floor(loc / blocksize);
+            }
+            function signed_determinant(p0, p1, blk_corner) {
+                return (blk_corner.x - p0.x) * (p1.y - p0.y) -
+                    (blk_corner.y - p0.y) * (p1.x - p0.x);
+            }
+            // These represent the edges of the sprite
+            var
+            pleft = player_sprite.x - player_sprite.pivot.x / 2,
+            pright = player_sprite.x + player_sprite.pivot.x / 2,
+            ptop = player_sprite.y - player_sprite.pivot.y / 2,
+            pbottom = player_sprite.y + player_sprite.pivot.y / 2,
+            ppleft = player_sprite.previous_position.x - player_sprite.pivot.x / 2,
+            ppright = player_sprite.previous_position.x + player_sprite.pivot.x / 2,
+            pptop = player_sprite.previous_position.y - player_sprite.pivot.y / 2,
+            ppbottom = player_sprite.previous_position.y + player_sprite.pivot.y / 2;
+
+            var
+            bleft = blkaddr(pleft),
+            bright = blkaddr(pright),
+            btop = blkaddr(ptop),
+            bbottom = blkaddr(pbottom);
+
+            function bounce_y() {
+                player_sprite.velocity_y = (-player_sprite.velocity_y) * wall_bounce_coefficient;
+                player_sprite.position.y = player_sprite.previous_position.y;
+                player_sprite.position.x += player_sprite.velocity_x;
+            }
+            function bounce_x() {
+                player_sprite.velocity_x = (-player_sprite.velocity_x) * wall_bounce_coefficient;
+                player_sprite.position.x = player_sprite.previous_position.x;
+                player_sprite.position.y += player_sprite.velocity_y;
+            }
+            if ([!terrain[btop][bleft],
+                 !terrain[btop][bright],
+                 !terrain[bbottom][bright],
+                 !terrain[bbottom][bleft]].reduce(function (prev, curr, i, arr)
+                         {
+                             return prev + (curr ? 1 : 0);
+                         }) == 3) {
+                // Three corners are colliding, bounce back both ways
+                bounce_x(); bounce_y();
+            } else if (!terrain[btop][bleft] && !terrain[btop][bright]) {
+                // We are colliding with both top corners.
+                bounce_y();
+            } else if (!terrain[btop][bleft] && !terrain[bbottom][bleft]) {
+                // Left side is colliding completely, bounce along x
+                bounce_x();
+            } else if (!terrain[btop][bright] && !terrain[bbottom][bright]) {
+                // Right side is colliding completely, bounce along x
+                bounce_x();
+            } else if (!terrain[bbottom][bleft] && !terrain[bbottom][bright]) {
+                // Bottom side is colliding completely, bounce along y
+                bounce_y();
+            } // Now handle single corner collisions
+            else if (!terrain[btop][bleft]) {
+                // top left is intersecting a wall
+                var blk_corner = {
+                    x: (bleft * blocksize) + blocksize,
+                    y: (btop * blocksize) + blocksize
+                },
+                d = signed_determinant({ x : pleft, y: ptop },
+                                       { x : ppleft, y: pptop },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_y();
+                } else if (d < 0) {
+                    bounce_x();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[btop][bright]) {
+                // top right is intersecting a wall
+                var blk_corner = {
+                    x: (bright * blocksize),
+                    y: (btop * blocksize) + blocksize
+                },
+                d = signed_determinant({ x : pright, y: ptop },
+                                       { x : ppright, y: pptop },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_x();
+                } else if (d < 0) {
+                    bounce_y();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[bbottom][bleft]) {
+                // bottom left is intersecting a wall
+                var blk_corner = {
+                    x: (bleft * blocksize) + blocksize,
+                    y: (bbottom * blocksize)
+                },
+                d = signed_determinant({ x : pleft, y: pbottom },
+                                       { x : ppleft, y: ppbottom },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_x();
+                } else if (d < 0) {
+                    bounce_y();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            }
+            else if (!terrain[bbottom][bright]) {
+                // bottom right is intersecting a wall
+                var blk_corner = {
+                    x: (bright * blocksize),
+                    y: (bbottom * blocksize)
+                },
+                d = signed_determinant({ x : pright, y: pbottom },
+                                       { x : ppright, y: ppbottom },
+                                       blk_corner);
+                if (d > 0) {
+                    bounce_y();
+                } else if (d < 0) {
+                    bounce_x();
+                } else {
+                    bounce_x(); bounce_y();
+                }
+            } else {
+                // No collisions
+                player_sprite.previous_position.x = player_sprite.x;
+                player_sprite.previous_position.y = player_sprite.y;
+                player_sprite.position.x += player_sprite.velocity_x;
+                player_sprite.position.y += player_sprite.velocity_y;
+            }
+
+            // update rotation
+            update_player_sprite_rotation();
+
+            emit_player_data();
+
+            for (var id in map_items) {
+                var item = map_items[id];
+                if (is_intersecting(player_sprite, item.sprite)){
+                    item.collect();
+                }
             }
         }
     }
@@ -623,6 +975,7 @@ function run_game() {
                     console.log("You got hit", player_hp);
                     if (player_hp <= 0) {
                         reset_player();
+                        socket.emit('death', {});
                         emit_player_data();
                     }
                 }
@@ -638,6 +991,7 @@ function run_game() {
 
     function animate() {
         handle_input();
+        update_player_physics();
         update_projectiles();
         update_ui();
         requestAnimFrame( animate );
