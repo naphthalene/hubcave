@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from hubcave.dashboard.view_mixins import CacheViewMixin
 from django.contrib.sessions.models import Session
 
-from hubcave.game.models import Game
+from hubcave.game.models import Game, Inventory
 
 from datetime import datetime
 
@@ -29,6 +29,7 @@ class DashboardView(TemplateView):
         context = super(DashboardView, self).get_context_data(**kwargs)
         # Display repositories
         dash, _ = Dashboard.objects.get_or_create(user=self.request.user)
+        inventory, _ = Inventory.objects.get_or_create(user=self.request.user)
         try:
             dash.get_or_update_games()
         except:
