@@ -264,7 +264,7 @@ function run_game() {
     };
 
     Inventory.prototype.hasItem = function(item_type) {
-        for (var i=0; i<9; ++i){
+        for (var i=0; i<this.items.length; ++i){
             if (this.items[i].type == item_type) {
                 return true;
             }
@@ -273,13 +273,13 @@ function run_game() {
     };
 
     Inventory.prototype.stackItem = function(item_type) {
-        for (var i=0; i<9; ++i){
+        for (var i=0; i<this.items.length; ++i){
             var item = this.items[i];
             if (item.type == item_type) {
                 item.count += 1;
             }
+            this.update();
         }
-        return false;
     };
 
     Inventory.prototype.popItem = function(item) {
@@ -316,10 +316,7 @@ function run_game() {
                     s.position.x = offset;
                     s.position.y = this.padding * this.sprite_size;
                     if (item.stackable) {
-                        var count_text = new PIXI.Text(
-                            (item.count).toString(),
-                            { font: '9px Arial' });
-                        s.addChild(count_text);
+                        item.counter_text.setText(item.count);
                     }
                     this.container.addChild(s);
                 }
@@ -342,14 +339,9 @@ function run_game() {
             this.InventoryItem = extend(
                 this,
                 {
-                    constructor: function(type, textureloc, stackable) {
+                    constructor: function(type, textureloc, stackable, count) {
                         this.type = type;
                         this.stackable = stackable;
-                        if (stackable) {
-                            this.count = 1;
-                        } else {
-                            this.count = NaN;
-                        }
                         this.texture = PIXI.Texture.fromImage(textureloc);
                         this.getSprite();
                         this.sprite.interactive = true;
@@ -358,6 +350,14 @@ function run_game() {
                             return function(idata) {
                                 inventory.setActive(item);
                             }; }(this);
+                        this.count = count;
+                        if (stackable) {
+                            this.counter_text = new PIXI.Text(
+                                (this.count).toString(),
+                                { font: '14px Arial' });
+                            this.counter_text.position.y = 35;
+                            this.sprite.addChild(this.counter_text);
+                        }
                     }
                 });
             this.MapItem = extend(
@@ -409,7 +409,8 @@ function run_game() {
                           var item = new Item.InventoryItem(
                               item_data.type,
                               item_data.texture,
-                              item_data.stackable);
+                              item_data.stackable,
+                              item_data.count);
                           inventory.addItem(item);
                       }
                   }});

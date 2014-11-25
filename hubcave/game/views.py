@@ -42,7 +42,10 @@ class GameDetail(DetailView):
         context['user_id'] = self.request.user.id;
         context['user_name'] = self.request.user.username;
         self.object.map_type = "cave";
-        self.object.generate_or_update_map()
+        try:
+            self.object.generate_or_update_map()
+        except:
+            print "No network or Github unreachable"
         return context
 
 class GameUpdate(UpdateView):

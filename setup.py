@@ -8,6 +8,7 @@ install_requires = [
     'django>=1.6.5,<1.7',
     'south>=0.8.4,<0.9',
     'django-crispy-forms>=1.4.0,<1.5',
+    'django-model-utils==2.2',
     'django-custom-user>=0.4,<0.5',
     'django-tables2>=0.15.0,<0.16',
     'django-braces>=1.4,<1.5',

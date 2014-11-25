@@ -4,6 +4,7 @@ from github import Github
 from random import random
 from datetime import datetime
 from django.db import models
+from model_utils.managers import InheritanceManager
 from django.contrib.auth.models import User
 
 import itertools
@@ -159,6 +160,8 @@ class Item(models.Model):
 class InventoryItem(models.Model):
     inventory = models.ForeignKey(Inventory, related_name="items")
     item = models.ForeignKey(Item, related_name="i_instances")
+
+    objects = InheritanceManager()
 
 class StackableInventoryItem(InventoryItem):
     count = models.IntegerField()

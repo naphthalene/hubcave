@@ -17,7 +17,9 @@ from socketio.sdjango import namespace
 from hubcave.game.item_effects import actions
 from hubcave.userprofile.models import UserProfile
 from hubcave.game.mixins import GameMixin
-from hubcave.game.models import Game, Player, Message, Inventory, MapItem
+from hubcave.game.models import (Game, Player, Message,
+                                 Inventory, MapItem,
+                                 StackableInventoryItem)
 from hubcave.game.protobuf import hubcave_pb2
 
 @namespace('/game')
@@ -61,13 +63,21 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
 
         # Update inventory for the player
         if len(self.inventory.items.all()) <> 0:
-            self.emit('inventory_add', {
-                'items' : map(lambda i: {
+            # print self.inventory.items.all().select_subclasses()
+            items = []
+            for i in self.inventory.items.all().select_subclasses():
+                item = {
                     'id': i.id,
                     'type': i.item.kind,
-                    'texture': i.item.texture_location
-                }, self.inventory.items.all())
-            })
+                    'texture': i.item.texture_location,
+                    'stackable': i.item.stackable
+                }
+                if i.item.stackable:
+                    item['count'] = i.count
+                else:
+                    item['count'] = None
+                items.append(item)
+            self.emit('inventory_add', {'items' : items})
 
         # Update map for the player
         if len(self.game.items.all()) <> 0:
