@@ -64,5 +64,8 @@ following steps:
    step 2.
 7. Run ```hubcave syncdb``` (do create superuser) followed by ```hubcave
    migrate``` and ```hubcave collectstatic --noinput```
-8. You should now be able to run your dev server using ```hubcave
+8. Run ```hubcave loaddata items``` to load the initial fixtures for the
+   items in the game. This fixture is defined in
+   game/fixtures/items.json
+9. You should now be able to run your dev server using ```hubcave
    runserver_socketio```
