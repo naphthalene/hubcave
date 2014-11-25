@@ -1,0 +1,26 @@
+[
+    {
+        "fields": {
+            "kind": "bow",
+            "texture": "bow"
+        },
+        "model": "game.item",
+        "pk": 1
+    },
+    {
+        "fields": {
+            "kind": "gold",
+            "texture": "gold"
+        },
+        "model": "game.item",
+        "pk": 2
+    },
+    {
+        "fields": {
+            "kind": "blue_pot",
+            "texture": "blue_potion"
+        },
+        "model": "game.item",
+        "pk": 3
+    }
+]
