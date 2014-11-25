@@ -1,35 +1,34 @@
 // HUBCAVE
-// window.onbeforeunload = function (e) {
-//   return "Quit game?";
-// };
 
 // Disable the chat window initially
 $('#chat_input').width($('.chat-panel').width() - 50);
 
-socket = io.connect("/game", {
-                        transports: ['websocket',
-                                     'flashsocket',
-                                     'polling']
-                    });
+var socket = io.connect("/game", {
+                            transports: ['websocket',
+                                         'flashsocket',
+                                         'polling']
+                        });
 socket.on('connect', function () {
               socket.emit('join', [game_id, user_id]);
           });
 
+var loaded = false;
 socket.on('loading', function (data) {
-              hubcave_data = data.map;
-              for (var i = data.messages.length - 1; i >= 0; --i){
-                  var msg = data.messages[i];
-                  $("#room_chat ul").prepend(
-                      '<li>[' + msg.when + '] ' +
-                          '<a href=/profile/' + msg.user_id + '>' +
-                          msg.user_name + ' </a><span> ' +
-                          msg.text + ' </span>' +
-                          '</li>');
+              if (!loaded) {
+                  hubcave_data = data.map;
+                  for (var i = data.messages.length - 1; i >= 0; --i){
+                      var msg = data.messages[i];
+                      $("#room_chat ul").prepend(
+                          '<li>[' + msg.when + '] ' +
+                              '<a href=/profile/' + msg.user_id + '>' +
+                              msg.user_name + ' </a><span> ' +
+                              msg.text + ' </span>' +
+                              '</li>');
+                  }
+                  loaded = true;
+                  run_game();
               }
-              run_game();
           });
-
-// Let us kick off the show
 
 function run_game() {
     // create an new instance of a pixi stage
@@ -45,12 +44,9 @@ function run_game() {
     var wallTexture = PIXI.Texture.fromImage("/static/img/wall.png");
     var floorTexture = PIXI.Texture.fromImage("/static/img/floortile.png");
     var projectileTexture = PIXI.Texture.fromImage("/static/img/arrow.png");
+    var blankItemTexture = PIXI.Texture.fromImage("/static/img/items/blank.png");
     var charTexture = PIXI.Texture.fromImage("/static/img/ghlogo.png");
     var vignetteTexture = PIXI.Texture.fromImage("/static/img/vignette.png");
-
-    for (i=0; i < hubcave_data.blockdata.length; ++i) {
-        var block = hubcave_data.blockdata[i];
-    }
 
     // PIXI.Texture.addTextureToCache(wallTexture, 'walltex');
     var blocksize = 50;
@@ -99,6 +95,7 @@ function run_game() {
     scrollArea.scale.y = scrollArea.scale.x;
 
     users = {};
+    map_items = {};
 
     // Bow is default item at '1'
     // Items/keys -> map 2-0 keys to select
@@ -124,9 +121,11 @@ function run_game() {
             player_sprite.position.x = parseInt(hubcave_data.starting_y * blocksize +
                                                 player_sprite.height);
         }
-        player_hp = 100;
+        // This is set by the socket event
+        player_hp = 0;
+        player_gold = 0;
+        // This is untracked for now
         player_ammo = 500;
-        player_items = {};
     }; reset_player();
 
     player_sprite.pivot.x = player_sprite.width;
@@ -134,42 +133,20 @@ function run_game() {
 
     var nick = new PIXI.Text(user_name,
                              {
-                                 font: 'bold 12px Arial'
+                                 font: 'bold 9px Arial'
                              });
     player_sprite.addChild(nick);
 
-    enemies = [];
+    // enemies = [];
 
     scrollArea.addChild(player_sprite);
 
     stage.addChild(scrollArea);
 
-    // Define our items
-    // Location is 2D vector
-    function Item (type, location) {
-        this.type = type;
-        this.sprite.location = location;
-        this.sprite.pivot.x = this.sprite.width;
-        this.sprite.pivot.y = this.sprite.height;
-        // Add a random rotation, why not
-        this.sprite.rotation = Math.random() * Math.pi * 2;
-        // Inheriting classes can override this anyway
-    }
-
-    function Item__Gold(location, opts){
-        Item.apply(this, 'item__gold', location);
-    }
-    Item__Gold.prototype.sprite = PIXI.Texture.fromImage("/static/img/items/gold.png");
-
-    function Item__Arrow(location, opts){
-        Item.apply(this, 'item__arrow', location);
-    }
-    Item__Arrow.prototype.sprite = projectileTexture;
-
     // Add ui overlay
     ui_show = true;
 
-    ui = new PIXI.DisplayObjectContainer();
+    var ui = new PIXI.DisplayObjectContainer();
     ui.position.x = 0;
     ui.position.y = 0;
     ui.width = render_size;
@@ -178,51 +155,309 @@ function run_game() {
     ui.buttonMode = true;
     stage.addChild(ui);
 
-    inventory = new PIXI.Graphics();
-    // inventory.x = 5;
-    // inventory.y = 5;
-    // inventory.width = render_size - 5;
-    // inventory.height = 40;
-
-    ui.addChild(inventory);
-
-    inventory.beginFill(0xFFFFFF, 0.3);
-    inventory.drawRect(5,5, render_size - 10, 40);
-    inventory.endFill();
-
     hitpoints_counter = new PIXI.Text("HP: " + player_hp.toString(),
-                                      { fill: 'white' });
-    hitpoints_counter.x = 15;
-    hitpoints_counter.y = 15;
+                                      { fill: 'white',
+                                        font: 'bold 13px Arial' });
 
+    hitpoints_counter.x = 15;
+    hitpoints_counter.y = 3;
     ui.addChild(hitpoints_counter);
 
-    ammo_counter = new PIXI.Text("Ammo: " + player_ammo.toString(),
-                                      { fill: 'white' });
+    ammo_counter = new PIXI.Text("Arrows: " + player_ammo.toString(),
+                                      { fill: 'white' ,
+                                        font: 'bold 13px Arial'});
     ammo_counter.x = 30 + hitpoints_counter.width;
-    ammo_counter.y = 15;
+    ammo_counter.y = 3;
 
     ui.addChild(ammo_counter);
 
-    ui.mousedown = function(idata) {
-        console.log(idata.originalEvent.layerX, idata.originalEvent.layerY);
+    gold_counter = new PIXI.Text("Gold: " + player_gold.toString(),
+                                      { fill: 'white' ,
+                                        font: 'bold 13px Arial'});
+    gold_counter.x = 15;
+    gold_counter.y = hitpoints_counter.height + 8;
+
+    ui.addChild(gold_counter);
+
+    var inventory_container = new PIXI.DisplayObjectContainer();
+    // Initial offsets from the left and top
+    inventory_container.position.x = ammo_counter.width + ammo_counter.x + 15;
+    inventory_container.position.y = 3;
+    inventory_container.width = ui._width;
+    inventory_container.height = ui._height;
+
+    var gfx = new PIXI.Graphics();
+
+    inventory_container.addChild(gfx);
+    inventory_container.gfx = gfx;
+
+    ui.addChild(inventory_container);
+
+    // inventory_container.addChild(new PIXI.Sprite(wallTexture));
+    // This should be set by the server over the socket on 'loading'
+    // This is a list of Items defined above (at most 9 here)
+    function Inventory (items, container) {
+        this.items = items;
+        this.padding = 0.1;
+        this.container = container;
+        this.container.gfx.clearActive = function() {
+            this.clear();
+            this.beginFill(0xFFFFFF, 0.8);
+            this.drawRect(0, 0, this.parent.width, this.parent.height + 10);
+            this.endFill();
+        };
+        this.update();
+        this.container.gfx.clearActive();
+        for (var i=0,offset=this.padding; i<9; ++i) {
+            var index_text = new PIXI.Text((i + 1).toString(),
+                                           {
+                                               font: '9px Arial'
+                                           });
+            index_text.position.x = offset;
+            index_text.position.y = this.padding * this.sprite_size;
+            this.container.addChild(index_text);
+            offset += ((2 * this.padding) + this.sprite_size);
+            // Can't use keydrown for this....
+            document.addEventListener(
+                'keyup',
+                function(inv, index) {
+                    return function(evt) {
+                        if (evt.keyCode == (index + 49)){
+                            var previously_active = inv.active_item;
+                            try {
+                                inv.setActive(inv.items[index]);
+                            } catch (x) {
+                                inv.setActive(previously_active);
+                                console.log('Tried to access item that does not exist');
+                            }
+                        }
+                    }; }(this, i));
+        }
+    }
+    // People you follow's activity will be shown in a live updating feed on the dashboard.
+    // Need to reorganize the dash, make it better for mobile
+
+    // ---
+    // Each slot is assigned an item
+    //
+    Inventory.prototype.setActive = function(item) {
+        this.container.gfx.clearActive();
+        this.active_item = item;
+        this.container.gfx.beginFill(0x0, 0.2);
+        this.container.gfx.lineStyle(2, 0xBB0000);
+        var s = item.getSprite();
+        this.container.gfx.drawRect(
+            s.position.x, s.position.y,
+            s._width, s._height);
+        this.container.gfx.endFill();
     };
+
+    Inventory.prototype.addItem = function(item) {
+        if (this.items.length < 9){
+            this.items.push(item);
+            this.update();
+            this.setActive(item);
+            return true;
+        } else {
+            return false;
+        }
+    };
+
+    Inventory.prototype.hasItem = function(item_type) {
+        for (var i=0; i<this.items.length; ++i){
+            if (this.items[i].type == item_type) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    Inventory.prototype.stackItem = function(item_type) {
+        for (var i=0; i<this.items.length; ++i){
+            var item = this.items[i];
+            if (item.type == item_type) {
+                item.count += 1;
+            }
+            this.update();
+        }
+    };
+
+    Inventory.prototype.popItem = function(item) {
+        this.items.pop(item);
+        this.update();
+    };
+
+    Inventory.prototype.update = function() {
+        // Get the bounds of the container
+        // Space out evenly, the number of items in the list
+        var cell_size = this.container._height;
+        // Handle selected item (draw bounding box)
+        // each item container has a padding from each side proportional
+        // to the item container width. The rectangle formed by this
+        // inside padding is what the scale of the item sprite should
+        // be. Could be able to achieve this by setting widths
+        this.sprite_size = cell_size -
+            (2 * this.padding * cell_size);
+
+        for (var i=0,offset=this.padding; i<9; ++i){
+            if (i > this.items.length - 1){
+                var s = new PIXI.Sprite(blankItemTexture);
+                s.width = this.sprite_size;
+                s.height = this.sprite_size;
+                s.position.x = offset;
+                s.position.y = this.padding * this.sprite_size;
+                this.container.addChild(s);
+            } else {
+                var item = this.items[i];
+                if (!(typeof item === "undefined")) {
+                    var s = item.getSprite();
+                    s.width = this.sprite_size;
+                    s.height = this.sprite_size;
+                    s.position.x = offset;
+                    s.position.y = this.padding * this.sprite_size;
+                    if (item.stackable) {
+                        item.counter_text.setText(item.count);
+                    }
+                    this.container.addChild(s);
+                }
+            }
+            offset += ((2 * this.padding) + this.sprite_size);
+        }
+    };
+
+    var extend = augment.extend;
+
+    var Item = augment(
+        Object,
+        function () {
+            this.getSprite = function () {
+                if (typeof this.sprite === 'undefined') {
+                    this.sprite = new PIXI.Sprite(this.texture);
+                }
+                return this.sprite;
+            };
+            this.InventoryItem = extend(
+                this,
+                {
+                    constructor: function(type, textureloc, stackable, count) {
+                        this.type = type;
+                        this.stackable = stackable;
+                        this.texture = PIXI.Texture.fromImage(textureloc);
+                        this.getSprite();
+                        this.sprite.interactive = true;
+                        this.sprite.buttonMode = true;
+                        this.sprite.mousedown = function(item) {
+                            return function(idata) {
+                                inventory.setActive(item);
+                            }; }(this);
+                        this.count = count;
+                        if (stackable) {
+                            this.counter_text = new PIXI.Text(
+                                (this.count).toString(),
+                                { font: '14px Arial' });
+                            this.counter_text.position.y = 35;
+                            this.sprite.addChild(this.counter_text);
+                        }
+                    }
+                });
+            this.MapItem = extend(
+                this,
+                {
+                    constructor: function(id, type, x, y, textureloc) {
+                        this.id = id;
+                        this.type = type;
+                        this.texture = PIXI.Texture.fromImage(textureloc);
+                        var s = this.getSprite();
+                        s.position.x = x;
+                        s.position.y = y;
+                        s.width = blocksize / 5;
+                        s.height = blocksize / 5;
+                        // s.pivot.x = s._width;
+                        // s.pivot.y = s._height;
+                        // Add a random rotation, why not
+                        // Inheriting classes can override this anyway
+                        // s.rotation = Math.random() * Math.pi * 2;
+                        scrollArea.addChild(s);
+                    },
+                    collect: function () {
+                        socket.emit('collect', {
+                                        data: {
+                                            user: user_id,
+                                            id: this.id
+                                        }
+                                    });
+                    }
+                });
+        });
+
+    socket.on('collect_ok' ,function (data) {
+                  var item = map_items[data.data.id];
+                  scrollArea.removeChild(item.sprite);
+                  delete map_items[data.data.id];
+              });
+
+    // Populate inventory using socket data
+    var inventory = new Inventory([], inventory_container);
+
+    socket.on('inventory_add', function (data) {
+                  for (var i=0; i < data.items.length; ++i) {
+                      var item_data = data.items[i];
+                      if (item_data.stackable &&
+                          inventory.hasItem(item_data.type)) {
+                          inventory.stackItem(item_data.type);
+                      } else {
+                          var item = new Item.InventoryItem(
+                              item_data.type,
+                              item_data.texture,
+                              item_data.stackable,
+                              item_data.count);
+                          inventory.addItem(item);
+                      }
+                  }});
+
+    socket.on('map_item_add', function (data) {
+                  for (var i=0; i < data.items.length; ++i) {
+                      var item_data = data.items[i],
+                          item = new Item.MapItem(item_data.id,
+                                                  item_data.type,
+                                                  item_data.y * blocksize + Math.random() * blocksize,
+                                                  item_data.x * blocksize + Math.random() * blocksize,
+                                                  item_data.texture);
+                      // console.log("** New Map Item : " + item_data.type, item.sprite);
+                      map_items[item.id] = item;
+                  }});
+
+    socket.on('collected_item', function (data) {
+                  console.log(data.data.user + " collected " + data.data.id);
+                  var item = map_items[data.data.id];
+                  scrollArea.removeChild(item.getSprite());
+                  delete map_items[data.data.id];
+              });
+
+    socket.on('add_gold', function(amount) {
+                  console.log("Got some gold:", amount);
+                  player_gold += amount;
+              });
 
     function update_ui(){
         if (ui_show){
-            // ui.removeChild(hitpoints_counter);
             hitpoints_counter.setText("HP: " + player_hp.toString());
-            ammo_counter.setText("Ammo: " + player_ammo.toString());
-            // ui.addChild(hitpoints_counter);
+            ammo_counter.setText("Arrows: " + player_ammo.toString());
+            gold_counter.setText("Gold: " + player_gold.toString());
         }
     }
 
     update_ui();
+    socket.on('profile', function(data) {
+                  player_hp = data.hp;
+                  player_gold = data.gold;
+                  update_ui();
+              });
 
     movespeed = blocksize / 20;
     var max_abs_velocity = movespeed;
     var player_friction_coefficient = 0.95;
-    var wall_bounce_coefficient = 0.02;
+    var wall_bounce_coefficient = 0;
     var player_acceleration = 1;
     shootspeed = blocksize / 10;
     rotatespeed = Math.PI / 50;
@@ -520,12 +755,14 @@ function run_game() {
     // adds velocity to player sprite for x or y within max_abs_velocity bounds
     function add_player_velocity(velo_delta, direction) {
         if (direction == 'x') {
-            if (Math.abs(player_sprite.velocity_x) <= max_abs_velocity) {
-                player_sprite.velocity_x += (velo_delta * player_acceleration);
+            var new_velocity = player_sprite.velocity_x + (velo_delta * player_acceleration);
+            if (Math.abs(new_velocity) <= max_abs_velocity) {
+                player_sprite.velocity_x = new_velocity;
             }
         } else if (direction == 'y') {
-            if (Math.abs(player_sprite.velocity_y) <= max_abs_velocity) {
-                player_sprite.velocity_y += (velo_delta * player_acceleration);
+            var new_velocity = player_sprite.velocity_y + (velo_delta * player_acceleration);
+            if (Math.abs(new_velocity) <= max_abs_velocity) {
+                player_sprite.velocity_y = new_velocity;
             }
         }
     }
@@ -739,6 +976,13 @@ function run_game() {
             update_player_sprite_rotation();
 
             emit_player_data();
+
+            for (var id in map_items) {
+                var item = map_items[id];
+                if (is_intersecting(player_sprite, item.sprite)){
+                    item.collect();
+                }
+            }
         }
     }
 
@@ -768,6 +1012,7 @@ function run_game() {
                     console.log("You got hit", player_hp);
                     if (player_hp <= 0) {
                         reset_player();
+                        socket.emit('death', {});
                         emit_player_data();
                     }
                 }

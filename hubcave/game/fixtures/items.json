@@ -1,0 +1,29 @@
+[
+    {
+        "fields": {
+            "kind": "bow",
+            "stackable": false,
+            "texture": "bow"
+        },
+        "model": "game.item",
+        "pk": 1
+    },
+    {
+        "fields": {
+            "kind": "gold",
+            "stackable": false,
+            "texture": "gold"
+        },
+        "model": "game.item",
+        "pk": 2
+    },
+    {
+        "fields": {
+            "kind": "blue_pot",
+            "stackable": true,
+            "texture": "blue_potion"
+        },
+        "model": "game.item",
+        "pk": 3
+    }
+]

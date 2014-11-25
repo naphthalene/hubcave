@@ -14,8 +14,12 @@ from socketio.namespace import BaseNamespace
 from socketio.mixins import BroadcastMixin
 from socketio.sdjango import namespace
 
+from hubcave.game.item_effects import actions
+from hubcave.userprofile.models import UserProfile
 from hubcave.game.mixins import GameMixin
-from hubcave.game.models import Game, Player, Message
+from hubcave.game.models import (Game, Player, Message,
+                                 Inventory, MapItem,
+                                 StackableInventoryItem)
 from hubcave.game.protobuf import hubcave_pb2
 
 @namespace('/game')
@@ -30,6 +34,8 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         self.game_id = game_id
         self.game = Game.objects.get(pk=game_id)
         self.user = User.objects.get(pk=user_id)
+        self.profile, _ = UserProfile.objects.get_or_create(user=self.user)
+        self.inventory = Inventory.objects.get(user=self.user)
         self.join(str(self.game_id))
         print("{} joined {}/{}".format(self.user.username,
                                        self.game.user.username,
@@ -37,6 +43,8 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         self.player, created = Player.objects.get_or_create(user=self.user,
                                                             game=self.game)
         msges = self.game.messages.order_by('-when')[:15]
+
+        # Map and message info
         self.emit('loading', {
             'map' : self.game.map_dict(),
             'messages' : map(lambda m: {
@@ -46,6 +54,44 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
                 'when' : formats.date_format(m.when, "TIME_FORMAT")
             }, msges)
         })
+
+        # User profile info
+        self.emit('profile', {
+            'hp' : self.profile.health,
+            'gold' : self.profile.gold
+        })
+
+        # Update inventory for the player
+        if len(self.inventory.items.all()) <> 0:
+            # print self.inventory.items.all().select_subclasses()
+            items = []
+            for i in self.inventory.items.all().select_subclasses():
+                item = {
+                    'id': i.id,
+                    'type': i.item.kind,
+                    'texture': i.item.texture_location,
+                    'stackable': i.item.stackable
+                }
+                if i.item.stackable:
+                    item['count'] = i.count
+                else:
+                    item['count'] = None
+                items.append(item)
+            self.emit('inventory_add', {'items' : items})
+
+        # Update map for the player
+        if len(self.game.items.all()) <> 0:
+            self.emit('map_item_add', {
+                'items' : map(lambda i: {
+                    'id' : i.id,
+                    'type': i.item.kind,
+                    'x': i.x,
+                    'y': i.y,
+                    'texture': i.item.texture_location
+                }, self.game.items.all())
+            })
+
+        # Notify others that you have joined
         self.emit_to_room(str(self.game_id), 'joining', {
             'data' : {
                 'user_id': user_id,
@@ -58,6 +104,49 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
 
     def on_projectile(self, data):
         self.emit_to_room(str(self.game_id), 'projectile', data)
+        return True
+
+    def on_death(self, data):
+        print "Dedz"
+        self.profile.health = 100
+        self.profile.gold -= 10
+        # Dock some gold
+        if self.profile.gold < 0:
+            self.profile.gold = 0
+        self.profile.save()
+        # User profile info
+        self.emit('profile', {
+            'hp' : self.profile.health,
+            'gold' : self.profile.gold
+        })
+        return True
+
+    def on_collect(self, data):
+        # Here, different items should do different things
+        try:
+            item = MapItem.objects.get(id=data['data']['id'])
+            print "{} collected ({}){} in {}".format(self.user.get_full_name(),
+                                                     item.id,
+                                                     item.item.kind,
+                                                     self.game)
+            def emit_success():
+                item.delete()
+                self.emit('collect_ok', data)
+                self.emit_to_room(str(self.game_id), 'collected_item', data)
+
+            if item.item.kind in actions:
+                actions[item.item.kind](self, item)
+            else:
+                actions['default'](self, item)
+            emit_success()
+
+        except MapItem.DoesNotExist as dne:
+            return True
+
+        except Exception as e:
+            print e
+            # Don't emit anything
+
         return True
 
     def on_msg(self, data):
