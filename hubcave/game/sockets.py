@@ -42,6 +42,7 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
                                                             game=self.game)
         msges = self.game.messages.order_by('-when')[:15]
 
+        # Map and message info
         self.emit('loading', {
             'map' : self.game.map_dict(),
             'messages' : map(lambda m: {
@@ -52,11 +53,13 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
             }, msges)
         })
 
+        # User profile info
         self.emit('profile', {
             'hp' : self.profile.health,
             'gold' : self.profile.gold
         })
 
+        # Update inventory for the player
         if len(self.inventory.items.all()) <> 0:
             self.emit('inventory_add', {
                 'items' : map(lambda i: {
@@ -66,6 +69,7 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
                 }, self.inventory.items.all())
             })
 
+        # Update map for the player
         if len(self.game.items.all()) <> 0:
             self.emit('map_item_add', {
                 'items' : map(lambda i: {
@@ -77,6 +81,7 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
                 }, self.game.items.all())
             })
 
+        # Notify others that you have joined
         self.emit_to_room(str(self.game_id), 'joining', {
             'data' : {
                 'user_id': user_id,
@@ -91,11 +96,19 @@ class GameNamespace(BaseNamespace, GameMixin, BroadcastMixin):
         self.emit_to_room(str(self.game_id), 'projectile', data)
         return True
 
-
     def on_death(self, data):
         print "Dedz"
         self.profile.health = 100
+        self.profile.gold -= 10
+        # Dock some gold
+        if self.profile.gold < 0:
+            self.profile.gold = 0
         self.profile.save()
+        # User profile info
+        self.emit('profile', {
+            'hp' : self.profile.health,
+            'gold' : self.profile.gold
+        })
         return True
 
     def on_collect(self, data):

@@ -121,7 +121,10 @@ function run_game() {
             player_sprite.position.x = parseInt(hubcave_data.starting_y * blocksize +
                                                 player_sprite.height);
         }
-        player_hp = 100;
+        // This is set by the socket event
+        player_hp = 0;
+        player_gold = 0;
+        // This is untracked for now
         player_ammo = 500;
     }; reset_player();
 
@@ -260,6 +263,25 @@ function run_game() {
         }
     };
 
+    Inventory.prototype.hasItem = function(item_type) {
+        for (var i=0; i<9; ++i){
+            if (this.items[i].type == item_type) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    Inventory.prototype.stackItem = function(item_type) {
+        for (var i=0; i<9; ++i){
+            var item = this.items[i];
+            if (item.type == item_type) {
+                item.count += 1;
+            }
+        }
+        return false;
+    };
+
     Inventory.prototype.popItem = function(item) {
         this.items.pop(item);
         this.update();
@@ -276,7 +298,7 @@ function run_game() {
         // be. Could be able to achieve this by setting widths
         this.sprite_size = cell_size -
             (2 * this.padding * cell_size);
-        // For each item
+
         for (var i=0,offset=this.padding; i<9; ++i){
             if (i > this.items.length - 1){
                 var s = new PIXI.Sprite(blankItemTexture);
@@ -293,6 +315,12 @@ function run_game() {
                     s.height = this.sprite_size;
                     s.position.x = offset;
                     s.position.y = this.padding * this.sprite_size;
+                    if (item.stackable) {
+                        var count_text = new PIXI.Text(
+                            (item.count).toString(),
+                            { font: '9px Arial' });
+                        s.addChild(count_text);
+                    }
                     this.container.addChild(s);
                 }
             }
@@ -314,8 +342,14 @@ function run_game() {
             this.InventoryItem = extend(
                 this,
                 {
-                    constructor: function(type, textureloc) {
+                    constructor: function(type, textureloc, stackable) {
                         this.type = type;
+                        this.stackable = stackable;
+                        if (stackable) {
+                            this.count = 1;
+                        } else {
+                            this.count = NaN;
+                        }
                         this.texture = PIXI.Texture.fromImage(textureloc);
                         this.getSprite();
                         this.sprite.interactive = true;
@@ -346,8 +380,6 @@ function run_game() {
                         scrollArea.addChild(s);
                     },
                     collect: function () {
-                        // This needs to be verified
-                        console.log("Collected item " + this.type);
                         socket.emit('collect', {
                                         data: {
                                             user: user_id,
@@ -366,17 +398,21 @@ function run_game() {
 
     // Populate inventory using socket data
     var inventory = new Inventory([], inventory_container);
-    // For now, start off with just a bow
-    // inventory.addItem(new Item__Bow());
 
     socket.on('inventory_add', function (data) {
                   for (var i=0; i < data.items.length; ++i) {
                       var item_data = data.items[i];
-                      var item = new Item.InventoryItem(item_data.type,
-                                                        item_data.texture);
-                      inventory.addItem(item);
+                      if (item_data.stackable &&
+                          inventory.hasItem(item_data.type)) {
+                          inventory.stackItem(item_data.type);
+                      } else {
+                          var item = new Item.InventoryItem(
+                              item_data.type,
+                              item_data.texture,
+                              item_data.stackable);
+                          inventory.addItem(item);
+                      }
                   }});
-    // inventory.addItem(new Item.InventoryItem('gold', '/static/img/items/gold.png'));
 
     socket.on('map_item_add', function (data) {
                   for (var i=0; i < data.items.length; ++i) {

@@ -150,6 +150,7 @@ class Item(models.Model):
     """
     kind = models.CharField(max_length=256)
     texture = models.CharField(max_length=256)
+    stackable = models.BooleanField(default=False)
 
     @property
     def texture_location(self):
@@ -158,6 +159,9 @@ class Item(models.Model):
 class InventoryItem(models.Model):
     inventory = models.ForeignKey(Inventory, related_name="items")
     item = models.ForeignKey(Item, related_name="i_instances")
+
+class StackableInventoryItem(InventoryItem):
+    count = models.IntegerField()
 
 class MapItem(models.Model):
     game = models.ForeignKey(Game, related_name="items")
