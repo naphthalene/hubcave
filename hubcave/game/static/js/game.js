@@ -217,7 +217,6 @@ function run_game() {
             index_text.position.y = this.padding * this.sprite_size;
             this.container.addChild(index_text);
             offset += ((2 * this.padding) + this.sprite_size);
-            // Can't use keydrown for this....
             document.addEventListener(
                 'keyup',
                 function(inv, index) {
@@ -454,8 +453,8 @@ function run_game() {
                   update_ui();
               });
 
-    movespeed = blocksize / 20;
-    var max_abs_velocity = movespeed;
+    var movespeed = blocksize / 100;
+    var max_abs_velocity = blocksize / 20;
     var player_friction_coefficient = 0.95;
     var wall_bounce_coefficient = 0;
     var player_acceleration = 1;
@@ -758,11 +757,17 @@ function run_game() {
             var new_velocity = player_sprite.velocity_x + (velo_delta * player_acceleration);
             if (Math.abs(new_velocity) <= max_abs_velocity) {
                 player_sprite.velocity_x = new_velocity;
+            } else {
+                player_sprite.velocity_x = max_abs_velocity *
+                    (player_sprite.velocity_x < 0 ? -1 : 1);
             }
         } else if (direction == 'y') {
             var new_velocity = player_sprite.velocity_y + (velo_delta * player_acceleration);
             if (Math.abs(new_velocity) <= max_abs_velocity) {
                 player_sprite.velocity_y = new_velocity;
+            } else {
+                player_sprite.velocity_y = max_abs_velocity *
+                    (player_sprite.velocity_y < 0 ? -1 : 1);
             }
         }
     }
@@ -783,14 +788,14 @@ function run_game() {
                 // handle lateral motion
                 if (kd.A.isDown() && !kd.D.isDown()) {
                     if (kd.W.isDown() || kd.S.isDown()){
-                        add_player_velocity(-1 / Math.sqrt(2),'x');
+                        add_player_velocity((-1 / Math.sqrt(2)) * movespeed,'x');
                     } else {
                         add_player_velocity(-1,'x');
                     }
                 }
                 else if (kd.D.isDown() && !kd.A.isDown()) {
                     if (kd.W.isDown() || kd.S.isDown()){
-                        add_player_velocity(1 / Math.sqrt(2),'x');
+                        add_player_velocity((1 / Math.sqrt(2)) * movespeed,'x');
                     } else{
                         add_player_velocity(1,'x');
                     }
@@ -799,14 +804,14 @@ function run_game() {
                 // handle verticle motion
                 if (kd.W.isDown() && !kd.S.isDown()) {
                     if (kd.A.isDown() || kd.D.isDown()){
-                        add_player_velocity(-1 / Math.sqrt(2),'y');
+                        add_player_velocity((-1 / Math.sqrt(2)) * movespeed,'y');
                     } else {
                         add_player_velocity(-1,'y');
                     }
                 }
                 else if (kd.S.isDown() && !kd.W.isDown()) {
                     if (kd.A.isDown() || kd.D.isDown()){
-                        add_player_velocity(1 / Math.sqrt(2),'y');
+                        add_player_velocity((1 / Math.sqrt(2)) * movespeed,'y');
                     } else {
                         add_player_velocity(1,'y');
                     }
@@ -831,7 +836,8 @@ function run_game() {
         player_sprite.velocity_y *= player_friction_coefficient;
 
         // if the player is moving emit locational data
-        if (Math.abs(player_sprite.velocity_x) >= 1 || Math.abs(player_sprite.velocity_y) >= 1) {
+        if (Math.abs(player_sprite.velocity_x) >= 0.5 ||
+            Math.abs(player_sprite.velocity_y) >= 0.5) {
             do_emit = true;
         }
 
@@ -849,15 +855,16 @@ function run_game() {
                     (blk_corner.y - p0.y) * (p1.x - p0.x);
             }
             // These represent the edges of the sprite
+            // Account for the current velocity
             var
-            pleft = player_sprite.x - player_sprite.pivot.x / 2,
-            pright = player_sprite.x + player_sprite.pivot.x / 2,
-            ptop = player_sprite.y - player_sprite.pivot.y / 2,
-            pbottom = player_sprite.y + player_sprite.pivot.y / 2,
-            ppleft = player_sprite.previous_position.x - player_sprite.pivot.x / 2,
-            ppright = player_sprite.previous_position.x + player_sprite.pivot.x / 2,
-            pptop = player_sprite.previous_position.y - player_sprite.pivot.y / 2,
-            ppbottom = player_sprite.previous_position.y + player_sprite.pivot.y / 2;
+            pleft = (player_sprite.x + player_sprite.velocity_x) - player_sprite.pivot.x / 2,
+            pright = (player_sprite.x + player_sprite.velocity_x) + player_sprite.pivot.x / 2,
+            ptop = (player_sprite.y + player_sprite.velocity_y) - player_sprite.pivot.y / 2,
+            pbottom = (player_sprite.y + player_sprite.velocity_y) + player_sprite.pivot.y / 2,
+            ppleft = player_sprite.position.x - player_sprite.pivot.x / 2,
+            ppright = player_sprite.position.x + player_sprite.pivot.x / 2,
+            pptop = player_sprite.position.y - player_sprite.pivot.y / 2,
+            ppbottom = player_sprite.position.y + player_sprite.pivot.y / 2;
 
             var
             bleft = blkaddr(pleft),
@@ -966,8 +973,8 @@ function run_game() {
                 }
             } else {
                 // No collisions
-                player_sprite.previous_position.x = player_sprite.x;
-                player_sprite.previous_position.y = player_sprite.y;
+                player_sprite.previous_position.x = player_sprite.position.x;
+                player_sprite.previous_position.y = player_sprite.position.y;
                 player_sprite.position.x += player_sprite.velocity_x;
                 player_sprite.position.y += player_sprite.velocity_y;
             }
