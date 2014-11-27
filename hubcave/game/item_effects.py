@@ -16,16 +16,14 @@ def add_to_inventory(ns, item):
             if not created:
                 new_item.count += 1
                 new_item.save()
-        i = {
-            'id': new_item.id,
-            'type': new_item.item.kind,
-            'texture': new_item.item.texture_location,
-            'stackable': new_item.item.stackable
-        }
-        if item.item.stackable:
-            i['count'] = item.count
         ns.emit('inventory_add', {
-            'items' : [i]
+            'items' : [{
+                'id': new_item.id,
+                'type': new_item.item.kind,
+                'texture': new_item.item.texture_location,
+                'stackable': new_item.item.stackable,
+                'count': 1
+            }]
         })
     else:
         raise Exception("Can't add any more")
