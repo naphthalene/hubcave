@@ -652,11 +652,11 @@ function run_game() {
               terrain[above_block][left_block]);
      }
 
-    function is_intersecting(r1, r2) {
-        return !(r2.x > (r1.x + r1.width)  ||
-                 (r2.x + r2.width ) < r1.x ||
-                 r2.y > (r1.y + r1.height) ||
-                 (r2.y + r2.height) < r1.y);
+    function is_intersecting(player, r) {
+        return !(r.x > (player.x + player.pivot.x / 2)  ||
+                 (r.x + r.width) < player.x - player.pivot.x / 2||
+                 r.y > (player.y + player.pivot.y / 2) ||
+                 (r.y + r.height) < player.y - player.pivot.y);
 
     }
 
@@ -1013,7 +1013,7 @@ function run_game() {
                     }
                 }
                 if (user != user_id &&
-                    is_intersecting(projectiles[user][i], player_sprite)){
+                    is_intersecting(player_sprite, projectiles[user][i])){
                     hit_user = true;
                     player_hp -= 1;
                     console.log("You got hit", player_hp);

@@ -122,6 +122,7 @@ class Game(models.Model):
                 if d[item_location[0]][item_location[1]]:
                     break
 
+        print "Dropping item {} in {}".format(item.kind, self.repository)
         return MapItem.objects.create(game=self,
                                       item=item,
                                       x=item_location[0],
