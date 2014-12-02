@@ -4,29 +4,33 @@ This is a hacky way of having items do arbitrary things
 from hubcave.game.models import InventoryItem, StackableInventoryItem
 
 def add_to_inventory(ns, item):
-    if len(InventoryItem.objects.all()) <= 9:
-        if not item.item.stackable:
+    if not item.item.stackable:
+        if len(InventoryItem.objects.all()) <= 9:
             new_item = InventoryItem.objects.create(inventory=ns.inventory,
                                                     item=item.item)
         else:
-            new_item, created = StackableInventoryItem.objects.get_or_create(
-                inventory=ns.inventory,
-                item=item.item,
-                defaults={'count' : 1})
-            if not created:
-                new_item.count += 1
-                new_item.save()
-        ns.emit('inventory_add', {
-            'items' : [{
-                'id': new_item.id,
-                'type': new_item.item.kind,
-                'texture': new_item.item.texture_location,
-                'stackable': new_item.item.stackable,
-                'count': 1
-            }]
-        })
+            raise Exception("Can't add any more")
     else:
-        raise Exception("Can't add any more")
+        new_item, created = StackableInventoryItem.objects.get_or_create(
+            inventory=ns.inventory,
+            item=item.item,
+            defaults={'count' : 1})
+        if not created:
+            new_item.count += 1
+            new_item.save()
+            ns.emit('inventory_add', {
+                'items' : [{
+                    'id': new_item.id,
+                    'type': new_item.item.kind,
+                    'texture': new_item.item.texture_location,
+                    'stackable': new_item.item.stackable,
+                    'count': 1
+                }]
+            })
+        else:
+            if len(InventoryItem.objects.all()) > 9:
+                new_item.delete()
+                raise Exception("Can't add any more")
 
 def gold(ns, item):
     ns.profile.gold += 1
