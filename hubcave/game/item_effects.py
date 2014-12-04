@@ -4,33 +4,40 @@ This is a hacky way of having items do arbitrary things
 from hubcave.game.models import InventoryItem, StackableInventoryItem
 
 def add_to_inventory(ns, item):
-    if not item.item.stackable:
-        if len(InventoryItem.objects.all()) <= 9:
-            new_item = InventoryItem.objects.create(inventory=ns.inventory,
-                                                    item=item.item)
-        else:
+    def check_size():
+        if len(InventoryItem.objects.filter(inventory=ns.inventory)) > 9:
             raise Exception("Can't add any more")
+
+
+    if not item.item.stackable:
+        check_size()
+        new_item = InventoryItem.objects.create(inventory=ns.inventory,
+                                                item=item.item)
     else:
-        new_item, created = StackableInventoryItem.objects.get_or_create(
-            inventory=ns.inventory,
-            item=item.item,
-            defaults={'count' : 1})
-        if not created:
+        try:
+            new_item = StackableInventoryItem.objects.get(
+                inventory=ns.inventory,
+                item=item.item)
             new_item.count += 1
             new_item.save()
-            ns.emit('inventory_add', {
-                'items' : [{
-                    'id': new_item.id,
-                    'type': new_item.item.kind,
-                    'texture': new_item.item.texture_location,
-                    'stackable': new_item.item.stackable,
-                    'count': 1
-                }]
-            })
-        else:
-            if len(InventoryItem.objects.all()) > 9:
-                new_item.delete()
-                raise Exception("Can't add any more")
+        except StackableInventoryItem.DoesNotExist:
+            if len(InventoryItem.objects.filter(inventory=ns.inventory)) + 1 > 9:
+                check_size()
+                new_item = StackableInventoryItem.objects.create(
+                    inventory=ns.inventory,
+                    item=item.item,
+                    count=1)
+    print "Emitting inventory_add"
+    ns.emit('inventory_add', {
+        'items' : [{
+            'id': new_item.id,
+            'type': new_item.item.kind,
+            'texture': new_item.item.texture_location,
+            'stackable': new_item.item.stackable,
+            'count': 1
+        }]
+    })
+
 
 def gold(ns, item):
     ns.profile.gold += 1
